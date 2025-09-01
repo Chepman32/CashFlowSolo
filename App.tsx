@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { StatusBar, StyleSheet, View, useColorScheme, ActivityIndicator, Text } from 'react-native';
-import { SafeAreaProvider } from 'react-native-safe-area-context';
+import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
 import { colors } from './src/theme/colors';
 import AppTabs from './src/navigation/AppTabs';
 import { hydrateFromDB, seedIfEmpty } from './src/store/persistence';
@@ -43,23 +43,26 @@ function App() {
         barStyle={isDark ? 'light-content' : 'dark-content'}
         backgroundColor={isDark ? colors.dark.background : colors.light.background}
       />
-      {!booted ? (
-        <View style={[styles.container, { alignItems: 'center', justifyContent: 'center' }]}> 
-          <ActivityIndicator />
-          <Text style={{ marginTop: 8, color: isDark ? colors.dark.textSecondary : colors.light.textSecondary }}>Preparing your data…</Text>
-        </View>
-      ) : accounts.length === 0 || envelopes.length === 0 ? (
-        <Onboarding onDone={() => { /* after onboarding, state updates trigger tabs */ }} />
-      ) : (
-      <View
+      <SafeAreaView
         style={[
           styles.container,
           { backgroundColor: isDark ? colors.dark.background : colors.light.background },
         ]}
+        edges={['top']}
       >
-        <AppTabs />
-      </View>
-      )}
+        {!booted ? (
+          <View style={[styles.container, { alignItems: 'center', justifyContent: 'center' }]}> 
+            <ActivityIndicator />
+            <Text style={{ marginTop: 8, color: isDark ? colors.dark.textSecondary : colors.light.textSecondary }}>Preparing your data…</Text>
+          </View>
+        ) : accounts.length === 0 || envelopes.length === 0 ? (
+          <Onboarding onDone={() => { /* after onboarding, state updates trigger tabs */ }} />
+        ) : (
+          <View style={styles.container}>
+            <AppTabs />
+          </View>
+        )}
+      </SafeAreaView>
     </SafeAreaProvider>
   );
 }
