@@ -1,17 +1,18 @@
 import React, { useMemo, useRef, useState } from 'react';
 import { View, Text, StyleSheet, ScrollView, Dimensions, Pressable, useColorScheme } from 'react-native';
+import { useTranslation } from 'react-i18next';
 import { colors } from '../theme/colors';
 import { useAppStore } from '../store/useAppStore';
+import { CURRENCIES, type CurrencyCode, currencyService } from '../services/currencyService';
 
 const { width } = Dimensions.get('window');
 
-const CURRENCIES = ['USD', 'EUR', 'JPY', 'GBP', 'AUD', 'CAD'];
-
 export default function Onboarding({ onDone }: { onDone: () => void }) {
+  const { t } = useTranslation();
   const isDark = useColorScheme() === 'dark';
   const theme = isDark ? colors.dark : colors.light;
   const [page, setPage] = useState(0);
-  const [currency, setCurrency] = useState('USD');
+  const [currency, setCurrency] = useState<CurrencyCode>('USD');
   const scrollRef = useRef<ScrollView>(null);
 
   const addAccount = useAppStore(s => s.addAccount);
@@ -41,12 +42,12 @@ export default function Onboarding({ onDone }: { onDone: () => void }) {
         scrollEnabled={false}
         showsHorizontalScrollIndicator={false}
       >
-        <Page title="Welcome" body="Your private, offline budget." />
-        <Page title="Envelope Method" body="Assign money to digital envelopes and stay on track." />
+        <Page title={t('onboarding.welcome')} body={t('onboarding.welcomeBody')} />
+        <Page title={t('onboarding.envelopeMethod')} body={t('onboarding.envelopeMethodBody')} />
         <CurrencyPage currency={currency} onSelect={setCurrency} />
-        <Page title="Get Started" body="We'll set up your first account and envelope.">
+        <Page title={t('onboarding.getStarted')} body={t('onboarding.getStartedBody')}>
           <Pressable onPress={finish} style={[styles.button, { backgroundColor: colors.light.primary }]}>
-            <Text style={{ color: 'white', fontWeight: '800' }}>Create My Budget</Text>
+            <Text style={{ color: 'white', fontWeight: '800' }}>{t('onboarding.createBudget')}</Text>
           </Pressable>
         </Page>
       </ScrollView>
@@ -55,7 +56,7 @@ export default function Onboarding({ onDone }: { onDone: () => void }) {
         <Dots count={4} index={page} />
         {page < 3 && (
           <Pressable onPress={next} style={[styles.next, { borderColor: theme.border }]}>
-            <Text style={{ color: theme.textPrimary, fontWeight: '700' }}>Next</Text>
+            <Text style={{ color: theme.textPrimary, fontWeight: '700' }}>{t('onboarding.next')}</Text>
           </Pressable>
         )}
       </View>
@@ -75,19 +76,25 @@ function Page({ title, body, children }: { title: string; body: string; children
   );
 }
 
-function CurrencyPage({ currency, onSelect }: { currency: string; onSelect: (c: string) => void }) {
+function CurrencyPage({ currency, onSelect }: { currency: CurrencyCode; onSelect: (c: CurrencyCode) => void }) {
+  const { t } = useTranslation();
   const isDark = useColorScheme() === 'dark';
   const theme = isDark ? colors.dark : colors.light;
   return (
     <View style={[styles.page, { width }]}> 
-      <Text style={[styles.title, { color: theme.textPrimary }]}>Base Currency</Text>
-      <Text style={[styles.body, { color: theme.textSecondary }]}>Choose your default currency.</Text>
+      <Text style={[styles.title, { color: theme.textPrimary }]}>{t('onboarding.baseCurrency')}</Text>
+      <Text style={[styles.body, { color: theme.textSecondary }]}>{t('onboarding.baseCurrencyBody')}</Text>
       <View style={{ marginTop: 16, gap: 8 }}>
-        {CURRENCIES.map(c => (
-          <Pressable key={c} onPress={() => onSelect(c)} style={[styles.row, { borderColor: theme.border, backgroundColor: currency === c ? colors.light.primary : 'transparent' }]}> 
-            <Text style={{ color: currency === c ? 'white' : theme.textPrimary, fontWeight: '700' }}>{c}</Text>
-          </Pressable>
-        ))}
+        {Object.values(CURRENCIES).map(currencyInfo => {
+          const localizedCurrency = currencyService.getLocalizedCurrencyInfo(currencyInfo.code, t);
+          return (
+            <Pressable key={currencyInfo.code} onPress={() => onSelect(currencyInfo.code)} style={[styles.row, { borderColor: theme.border, backgroundColor: currency === currencyInfo.code ? colors.light.primary : 'transparent' }]}> 
+              <Text style={{ color: currency === currencyInfo.code ? 'white' : theme.textPrimary, fontWeight: '700' }}>
+                {currencyInfo.flag} {localizedCurrency.name}
+              </Text>
+            </Pressable>
+          );
+        })}
       </View>
     </View>
   );

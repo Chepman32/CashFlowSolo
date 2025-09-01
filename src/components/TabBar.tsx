@@ -1,18 +1,20 @@
 import React from 'react';
 import { View, Text, Pressable, StyleSheet, useColorScheme } from 'react-native';
+import { useTranslation } from 'react-i18next';
 import { colors } from '../theme/colors';
 
 export type TabKey = 'dashboard' | 'envelopes' | 'transactions' | 'challenges' | 'settings';
 
-const TABS: { key: TabKey; label: string; icon: string }[] = [
-  { key: 'dashboard', label: 'Dashboard', icon: '🏠' },
-  { key: 'envelopes', label: 'Envelopes', icon: '✉️' },
-  { key: 'transactions', label: 'Transactions', icon: '📋' },
-  { key: 'challenges', label: 'Challenges', icon: '🏆' },
-  { key: 'settings', label: 'Settings', icon: '⚙️' },
+const TABS: { key: TabKey; labelKey: string; icon: string }[] = [
+  { key: 'dashboard', labelKey: 'tabs.dashboard', icon: '🏠' },
+  { key: 'envelopes', labelKey: 'tabs.envelopes', icon: '✉️' },
+  { key: 'transactions', labelKey: 'tabs.transactions', icon: '📋' },
+  { key: 'challenges', labelKey: 'tabs.challenges', icon: '🏆' },
+  { key: 'settings', labelKey: 'tabs.settings', icon: '⚙️' },
 ];
 
 export function TabBar({ value, onChange }: { value: TabKey; onChange: (t: TabKey) => void }) {
+  const { t } = useTranslation();
   const isDark = useColorScheme() === 'dark';
   const theme = isDark ? colors.dark : colors.light;
 
@@ -30,7 +32,7 @@ export function TabBar({ value, onChange }: { value: TabKey; onChange: (t: TabKe
                 fontWeight: focused ? '600' : '500',
               }}
             >
-              {tab.label}
+              {t(tab.labelKey)}
             </Text>
           </Pressable>
         );

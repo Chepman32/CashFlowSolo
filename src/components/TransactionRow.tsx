@@ -3,6 +3,7 @@ import { View, Text, StyleSheet } from 'react-native';
 import { colors } from '../theme/colors';
 import type { Transaction } from '../types';
 import { useAppTheme } from '../theme/ThemeProvider';
+import CurrencyDisplay from './CurrencyDisplay';
 
 export default function TransactionRow({ tx }: { tx: Transaction }) {
   const { colors: theme } = useAppTheme();
@@ -16,9 +17,12 @@ export default function TransactionRow({ tx }: { tx: Transaction }) {
         <Text style={[styles.title, { color: theme.textPrimary }]}>{tx.note || tx.type}</Text>
         <Text style={{ color: theme.textSecondary, fontSize: 12 }}>{new Date(tx.date).toDateString()}</Text>
       </View>
-      <Text style={{ color: amountColor, fontWeight: '700' }}>
-        {isIncome ? '+' : ''}${Math.abs(tx.amount).toFixed(2)}
-      </Text>
+      <CurrencyDisplay
+        amount={tx.amount}
+        currency={tx.currency}
+        showBaseCurrency={true}
+        style={{ color: amountColor, fontWeight: '700' }}
+      />
     </View>
   );
 }

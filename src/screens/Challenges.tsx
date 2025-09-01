@@ -1,19 +1,21 @@
 import React, { useState } from 'react';
 import { View, Text, StyleSheet, ScrollView, useColorScheme, Pressable, Modal } from 'react-native';
+import { useTranslation } from 'react-i18next';
 import { colors } from '../theme/colors';
 import { useAppStore } from '../store/useAppStore';
 import ChallengePosterModal from './ChallengePosterModal';
 
 export default function Challenges() {
+  const { t } = useTranslation();
   const isDark = useColorScheme() === 'dark';
   const theme = isDark ? colors.dark : colors.light;
   const savings_challenges = useAppStore(s => s.savings_challenges);
-  const toggle = useAppStore(s => s.toggleChallengeKey);
+  const toggleChallengeKey = useAppStore(s => s.toggleChallengeKey);
   const [openId, setOpenId] = useState<string | null>(null);
 
   return (
     <ScrollView contentContainerStyle={{ padding: 16 }}>
-      <Text style={[styles.headerTitle, { color: theme.textPrimary }]}>Challenges</Text>
+              <Text style={[styles.headerTitle, { color: theme.textPrimary }]}>{t('screens.challenges')}</Text>
       {savings_challenges.map(ch => (
         <View key={ch.id} style={[styles.card, { backgroundColor: theme.surface }]}> 
           <Text style={{ color: theme.textPrimary, fontWeight: '700', marginBottom: 8 }}>{ch.template_id}</Text>
@@ -33,7 +35,7 @@ export default function Challenges() {
             })}
           </View>
           <Pressable onPress={() => setOpenId(ch.id)} style={[styles.open, { borderColor: theme.border }]}>
-            <Text style={{ color: theme.textPrimary, fontWeight: '700' }}>Open Poster</Text>
+            <Text style={{ color: theme.textPrimary, fontWeight: '700' }}>{t('common.openPoster')}</Text>
           </Pressable>
         </View>
       ))}

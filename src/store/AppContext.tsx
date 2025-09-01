@@ -20,6 +20,7 @@ type Action =
   | { type: 'ADD_TRANSACTION'; payload: Transaction }
   | { type: 'ADD_ENVELOPE'; payload: Envelope }
   | { type: 'ADD_ACCOUNT'; payload: Account }
+  | { type: 'UPDATE_SETTINGS'; payload: Partial<Settings> }
   | { type: 'TOGGLE_CHALLENGE_KEY'; id: string; key: string };
 
 const AppStateContext = createContext<State | undefined>(undefined);
@@ -35,6 +36,8 @@ function reducer(state: State, action: Action): State {
       return { ...state, envelopes: [action.payload, ...state.envelopes] };
     case 'ADD_ACCOUNT':
       return { ...state, accounts: [action.payload, ...state.accounts] };
+    case 'UPDATE_SETTINGS':
+      return { ...state, settings: { ...state.settings, ...action.payload } };
     case 'TOGGLE_CHALLENGE_KEY':
       return {
         ...state,
@@ -65,6 +68,7 @@ function makeInitialState(theme: 'light' | 'dark' | 'system'): State {
       is_pro: false,
       passcode_enabled: false,
       theme,
+      language: 'en',
     },
     accounts: [
       {
@@ -186,6 +190,28 @@ export function useAppDispatch() {
   const ctx = useContext(AppDispatchContext);
   if (!ctx) throw new Error('useAppDispatch must be used within AppProvider');
   return ctx;
+}
+
+export function useAppStore<T>(selector: (state: State) => T): T {
+  const state = useAppState();
+  return selector(state);
+}
+
+export function useAppStoreActions() {
+  const dispatch = useAppDispatch();
+  
+  return {
+    addTransaction: (transaction: Transaction) => 
+      dispatch({ type: 'ADD_TRANSACTION', payload: transaction }),
+    addEnvelope: (envelope: Envelope) => 
+      dispatch({ type: 'ADD_ENVELOPE', payload: envelope }),
+    addAccount: (account: Account) => 
+      dispatch({ type: 'ADD_ACCOUNT', payload: account }),
+    updateSettings: (settings: Partial<Settings>) => 
+      dispatch({ type: 'UPDATE_SETTINGS', payload: settings }),
+    toggleChallengeKey: (id: string, key: string) => 
+      dispatch({ type: 'TOGGLE_CHALLENGE_KEY', id, key }),
+  };
 }
 
 export function formatCurrency(

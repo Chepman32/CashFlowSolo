@@ -1,5 +1,6 @@
 import React, { useMemo, useState } from 'react';
 import { View, Text, StyleSheet, ScrollView, useColorScheme } from 'react-native';
+import { useTranslation } from 'react-i18next';
 import { colors } from '../theme/colors';
 import { useAppStore } from '../store/useAppStore';
 import EnvelopeCard from '../components/EnvelopeCard';
@@ -8,8 +9,10 @@ import { FAB } from '../components/FAB';
 import AddTransactionModal from '../components/AddTransactionModal';
 import RingProgress from '../components/RingProgress';
 import EnvelopeSummaryCard from '../components/EnvelopeSummaryCard';
+import CurrencyDisplay from '../components/CurrencyDisplay';
 
 export default function Dashboard() {
+  const { t } = useTranslation();
   const isDark = useColorScheme() === 'dark';
   const theme = isDark ? colors.dark : colors.light;
   const accounts = useAppStore(s => s.accounts);
@@ -49,7 +52,7 @@ export default function Dashboard() {
       <AddTransactionModal visible={showAdd} onClose={() => setShowAdd(false)} />
       <ScrollView contentContainerStyle={{ padding: 16, paddingBottom: 140 }} showsVerticalScrollIndicator={false}>
         <View style={[styles.screenCard, { backgroundColor: theme.surface }]}> 
-          <Text style={[styles.headerTitle, { color: theme.textPrimary }]}>Dashboard</Text>
+          <Text style={[styles.headerTitle, { color: theme.textPrimary }]}>{t('screens.dashboard')}</Text>
 
           <View style={{ flexDirection: 'row', gap: 16, alignItems: 'center', marginBottom: 12 }}>
             <RingProgress
@@ -62,19 +65,23 @@ export default function Dashboard() {
               <Text style={{ fontSize: 28 }}>🛒</Text>
             </RingProgress>
             <View style={{ flex: 1 }}>
-              <Text style={{ color: theme.textSecondary, fontSize: 18 }}>Total Balance</Text>
-              <Text style={[styles.balance, { color: theme.textPrimary }]}>${totalBalance.toFixed(2)}</Text>
+              <Text style={{ color: theme.textSecondary, fontSize: 18 }}>{t('common.totalBalance')}</Text>
+              <CurrencyDisplay
+                amount={totalBalance}
+                currency={useAppStore.getState().settings.base_currency}
+                style={[styles.balance, { color: theme.textPrimary }]}
+              />
             </View>
           </View>
 
-          <Text style={[styles.sectionTitle, { color: theme.textPrimary }]}>Envelopes</Text>
+          <Text style={[styles.sectionTitle, { color: theme.textPrimary }]}>{t('screens.envelopes')}</Text>
           {topEnvelope ? (
             <EnvelopeSummaryCard envelope={topEnvelope} spent={topEnvelopeSpent} />
           ) : (
             <View style={[styles.card, { backgroundColor: theme.surface }]} />
           )}
 
-          <Text style={[styles.sectionTitle, { color: theme.textPrimary }]}>Budget usage</Text>
+          <Text style={[styles.sectionTitle, { color: theme.textPrimary }]}>{t('common.budgetUsage')}</Text>
           <View style={{ flexDirection: 'row', alignItems: 'center' }}>
             <View style={{ flex: 1, gap: 12 }}>
               {topEnvelope && (
@@ -101,7 +108,7 @@ export default function Dashboard() {
             </RingProgress>
           </View>
 
-          <Text style={[styles.sectionTitle, { color: theme.textPrimary, marginTop: 8 }]}>Recent Transactions</Text>
+          <Text style={[styles.sectionTitle, { color: theme.textPrimary, marginTop: 8 }]}>{t('screens.transactions')}</Text>
           <Text style={{ color: theme.textSecondary, marginBottom: 6 }}>
             {new Date().toDateString()}
           </Text>

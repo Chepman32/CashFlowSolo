@@ -1,4 +1,4 @@
-export type CurrencyCode = string; // e.g., "USD", "JPY"
+export type CurrencyCode = 'USD' | 'EUR' | 'GBP';
 
 export interface Settings {
   id: string;

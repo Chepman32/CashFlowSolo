@@ -27,6 +27,7 @@ function initialState(theme: Settings['theme']): Omit<AppState, 'addTransaction'
       is_pro: false,
       passcode_enabled: false,
       theme,
+      language: 'en',
     },
     accounts: [],
     envelopes: [],

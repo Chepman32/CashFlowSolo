@@ -1,10 +1,12 @@
 import React from 'react';
 import { View, Text, StyleSheet, ScrollView, useColorScheme, Pressable } from 'react-native';
+import { useTranslation } from 'react-i18next';
 import { colors } from '../theme/colors';
 import { useAppStore } from '../store/useAppStore';
 import EnvelopeCard from '../components/EnvelopeCard';
 
 export default function Envelopes({ onOpenEnvelope }: { onOpenEnvelope?: (id: string) => void }) {
+  const { t } = useTranslation();
   const isDark = useColorScheme() === 'dark';
   const theme = isDark ? colors.dark : colors.light;
   const envelopes = useAppStore(s => s.envelopes);
@@ -23,12 +25,12 @@ export default function Envelopes({ onOpenEnvelope }: { onOpenEnvelope?: (id: st
 
   return (
     <ScrollView contentContainerStyle={{ padding: 16, paddingBottom: 40 }}>
-      <Text style={[styles.headerTitle, { color: theme.textPrimary }]}>Envelopes</Text>
+              <Text style={[styles.headerTitle, { color: theme.textPrimary }]}>{t('screens.envelopes')}</Text>
 
       <View style={[styles.summary, { backgroundColor: theme.surface }]}> 
-        <Stat label="Budgeted" value={`$${budgeted.toFixed(2)}`} />
-        <Stat label="Spent" value={`$${spent.toFixed(2)}`} />
-        <Stat label="Remaining" value={`$${remaining.toFixed(2)}`} />
+        <Stat label={t('common.budgeted')} value={`$${budgeted.toFixed(2)}`} />
+        <Stat label={t('common.spent')} value={`$${spent.toFixed(2)}`} />
+        <Stat label={t('common.remaining')} value={`$${remaining.toFixed(2)}`} />
       </View>
 
       {envelopes.map(env => (

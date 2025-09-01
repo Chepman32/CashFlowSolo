@@ -12,6 +12,7 @@ import type { Attachment } from '../types';
 import type { Envelope } from '../types';
 import { useAppTheme } from '../theme/ThemeProvider';
 import { useTranslation } from 'react-i18next';
+import currencyService, { CURRENCIES, type CurrencyCode } from '../services/currencyService';
 
 export default function AddTransactionModal({ visible, onClose }: { visible: boolean; onClose: () => void }) {
   const { colors: theme } = useAppTheme();
@@ -23,6 +24,8 @@ export default function AddTransactionModal({ visible, onClose }: { visible: boo
   const [amount, setAmount] = useState('');
   const [note, setNote] = useState('');
   const [type, setType] = useState<'expense' | 'income' | 'transfer'>('expense');
+  const [selectedCurrency, setSelectedCurrency] = useState<CurrencyCode>('USD');
+  const [showCurrencyPicker, setShowCurrencyPicker] = useState(false);
   const defaultAccount = accounts[0]?.id;
   const [selectedEnvelope, setSelectedEnvelope] = useState<string | undefined>(undefined);
   const [phase, setPhase] = useState<'pick' | 'form'>('pick');
@@ -38,6 +41,7 @@ export default function AddTransactionModal({ visible, onClose }: { visible: boo
       setAmount('');
       setNote('');
       setType('expense');
+      setSelectedCurrency('USD');
       setAttachments([]);
     }
   }, [visible]);
@@ -55,13 +59,20 @@ export default function AddTransactionModal({ visible, onClose }: { visible: boo
     if (!canSave || !defaultAccount) return;
     const v = Number(amount);
     const now = new Date().toISOString();
+    
+    // Get the base currency from settings
+    const baseCurrency = useAppStore.getState().settings.base_currency as CurrencyCode;
+    
+    // Calculate exchange rate to base currency
+    const exchangeRate = currencyService.getExchangeRate(selectedCurrency, baseCurrency);
+    
     await addTransaction({
       id: `tx-${Date.now()}`,
       amount: type === 'expense' ? -Math.abs(v) : Math.abs(v),
       type,
       note: note || undefined,
-      currency: 'USD',
-      exchange_rate_to_base: 1,
+      currency: selectedCurrency,
+      exchange_rate_to_base: exchangeRate,
       date: now,
       created_at: now,
       // Attach envelope for expenses/transfers, and for income only if user picked one
@@ -73,6 +84,7 @@ export default function AddTransactionModal({ visible, onClose }: { visible: boo
     setAmount('');
     setNote('');
     setType('expense');
+    setSelectedCurrency('USD');
   }
 
   const headerTitle = phase === 'pick' ? t('picker.categoryPicker') : t('addTx.title');
@@ -160,14 +172,24 @@ export default function AddTransactionModal({ visible, onClose }: { visible: boo
               <Text style={{ color: theme.textSecondary, marginBottom: 6 }}>{`Category: ${envelopes.find(e => e.id === selectedEnvelope)?.name}`}</Text>
             )}
             <Text style={{ color: theme.textSecondary }}>{t('addTx.amount')}</Text>
-            <TextInput
-              value={amount}
-              onChangeText={setAmount}
-              keyboardType="decimal-pad"
-              placeholder="0.00"
-              placeholderTextColor={theme.textSecondary}
-              style={[styles.input, { color: theme.textPrimary }]}
-            />
+            <View style={styles.amountRow}>
+              <TextInput
+                value={amount}
+                onChangeText={setAmount}
+                keyboardType="decimal-pad"
+                placeholder="0.00"
+                placeholderTextColor={theme.textSecondary}
+                style={[styles.input, { color: theme.textPrimary, flex: 1 }]}
+              />
+              <Pressable 
+                onPress={() => setShowCurrencyPicker(true)}
+                style={[styles.currencyButton, { borderColor: theme.border }]}
+              >
+                <Text style={{ color: theme.textPrimary, fontWeight: '600' }}>
+                  {CURRENCIES[selectedCurrency].flag} {selectedCurrency}
+                </Text>
+              </Pressable>
+            </View>
 
             <Text style={{ color: theme.textSecondary, marginTop: 8 }}>{t('addTx.note')}</Text>
             <TextInput
@@ -206,6 +228,60 @@ export default function AddTransactionModal({ visible, onClose }: { visible: boo
         </View>
       </SafeAreaView>
       </SafeAreaProvider>
+
+      {/* Currency Picker Modal */}
+      <Modal visible={showCurrencyPicker} animationType="slide" transparent>
+        <View style={styles.currencyModalOverlay}>
+          <View style={[styles.currencyModalContent, { backgroundColor: theme.surface }]}>
+            <View style={styles.currencyModalHeader}>
+              <Text style={[styles.currencyModalTitle, { color: theme.textPrimary }]}>Select Currency</Text>
+              <Pressable onPress={() => setShowCurrencyPicker(false)} style={styles.currencyModalClose}>
+                <Text style={{ color: theme.textSecondary, fontSize: 24 }}>×</Text>
+              </Pressable>
+            </View>
+            
+            <View style={styles.currencyModalList}>
+              {Object.values(CURRENCIES).map(currency => (
+                <Pressable
+                  key={currency.code}
+                  onPress={() => {
+                    setSelectedCurrency(currency.code);
+                    setShowCurrencyPicker(false);
+                  }}
+                  style={[
+                    styles.currencyModalOption,
+                    { 
+                      borderColor: theme.border,
+                      backgroundColor: selectedCurrency === currency.code ? colors.light.primary : 'transparent'
+                    }
+                  ]}
+                >
+                  <View style={styles.currencyModalOptionContent}>
+                    <Text style={{ fontSize: 24, marginRight: 12 }}>{currency.flag}</Text>
+                    <View>
+                      <Text style={[
+                        styles.currencyModalOptionName,
+                        { color: selectedCurrency === currency.code ? 'white' : theme.textPrimary }
+                      ]}>
+                        {currency.name}
+                      </Text>
+                      <Text style={[
+                        styles.currencyModalOptionCode,
+                        { color: selectedCurrency === currency.code ? 'rgba(255,255,255,0.8)' : theme.textSecondary }
+                      ]}>
+                        {currency.code} ({currency.symbol})
+                      </Text>
+                    </View>
+                  </View>
+                  {selectedCurrency === currency.code && (
+                    <Text style={{ color: 'white', fontSize: 20 }}>✓</Text>
+                  )}
+                </Pressable>
+              ))}
+            </View>
+          </View>
+        </View>
+      </Modal>
     </Modal>
   );
 }
@@ -252,6 +328,18 @@ const styles = StyleSheet.create({
   footer: { marginTop: 'auto', flexDirection: 'row', gap: 12 },
   button: { flex: 1, padding: 16, borderRadius: 12, alignItems: 'center' },
   attachBtn: { flexDirection: 'row', alignItems: 'center', borderRadius: 999, borderWidth: StyleSheet.hairlineWidth, borderColor: '#CBD5E1', paddingHorizontal: 12, paddingVertical: 8, marginRight: 8 },
+  amountRow: { flexDirection: 'row', alignItems: 'center', gap: 12 },
+  currencyButton: { paddingHorizontal: 12, paddingVertical: 8, borderRadius: 8, borderWidth: StyleSheet.hairlineWidth, minWidth: 80, alignItems: 'center' },
+  currencyModalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'center', alignItems: 'center' },
+  currencyModalContent: { width: '90%', maxHeight: '80%', borderRadius: 16, overflow: 'hidden' },
+  currencyModalHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 20, paddingVertical: 16, borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: '#E5E7EB' },
+  currencyModalTitle: { fontSize: 20, fontWeight: '700' },
+  currencyModalClose: { padding: 8 },
+  currencyModalList: { padding: 20 },
+  currencyModalOption: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', padding: 16, marginBottom: 12, borderRadius: 12, borderWidth: StyleSheet.hairlineWidth },
+  currencyModalOptionContent: { flexDirection: 'row', alignItems: 'center', flex: 1 },
+  currencyModalOptionName: { fontSize: 16, fontWeight: '600', marginBottom: 2 },
+  currencyModalOptionCode: { fontSize: 14, fontWeight: '400' },
 });
 
 function Chip({ label, active, onPress, borderColor }: { label: string; active: boolean; onPress: () => void; borderColor: string }) {
