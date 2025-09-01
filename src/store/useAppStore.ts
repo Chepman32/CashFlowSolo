@@ -88,6 +88,8 @@ export const useAppStore = create<AppState>((set, get) => ({
           model.account_id = t.account_id;
           // @ts-ignore
           model.transfer_to_account_id = t.transfer_to_account_id ?? null;
+          // @ts-ignore
+          model.attachments = t.attachments ? JSON.stringify(t.attachments) : null;
         });
       });
     } catch {}

@@ -1,6 +1,7 @@
 import { Database } from '@nozbe/watermelondb';
 import SQLiteAdapter from '@nozbe/watermelondb/adapters/sqlite';
 import { schema } from './schema';
+import { migrations } from './migrations';
 import Account from './models/Account';
 import Envelope from './models/Envelope';
 import Transaction from './models/Transaction';
@@ -13,6 +14,7 @@ export function getDatabase() {
   if (!dbInstance) {
     const adapter = new SQLiteAdapter({
       schema,
+      migrations,
     });
 
     dbInstance = new Database({
@@ -22,4 +24,3 @@ export function getDatabase() {
   }
   return dbInstance!;
 }
-

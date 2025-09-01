@@ -1,6 +1,6 @@
 import { Q } from '@nozbe/watermelondb';
 import { getDatabase } from '../db';
-import type { Account, Envelope, SavingsChallenge, Settings, Transaction } from '../types';
+import type { Account, Attachment, Envelope, SavingsChallenge, Settings, Transaction } from '../types';
 
 export async function hydrateFromDB(): Promise<{
   settings: Settings | null;
@@ -56,6 +56,7 @@ export async function hydrateFromDB(): Promise<{
     envelope_id: t.envelope_id ?? undefined,
     account_id: t.account_id,
     transfer_to_account_id: t.transfer_to_account_id ?? undefined,
+    attachments: t.attachments ? (JSON.parse(t.attachments) as Attachment[]) : undefined,
   }));
 
   const savings_challenges: SavingsChallenge[] = chModels.map(c => ({

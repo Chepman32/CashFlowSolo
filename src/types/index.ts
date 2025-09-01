@@ -40,6 +40,7 @@ export interface Transaction {
   envelope_id?: string;
   account_id: string;
   transfer_to_account_id?: string; // only for transfers
+  attachments?: Attachment[];
 }
 
 export interface SavingsChallenge {
@@ -49,3 +50,10 @@ export interface SavingsChallenge {
   progress: Record<string, boolean>;
 }
 
+export interface Attachment {
+  id: string; // local unique id
+  name: string;
+  uri: string; // file:// or content://
+  mime?: string | null;
+  size?: number | null;
+}

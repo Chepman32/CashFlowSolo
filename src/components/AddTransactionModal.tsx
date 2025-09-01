@@ -1,18 +1,13 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import {
-  Modal,
-  View,
-  Text,
-  StyleSheet,
-  TextInput,
-  Pressable,
-  useColorScheme,
-} from 'react-native';
+import { Modal, View, Text, StyleSheet, TextInput, Pressable, useColorScheme, ScrollView, Image, Alert } from 'react-native';
 import { colors } from '../theme/colors';
 import Animated, { useAnimatedStyle, useSharedValue, withSpring } from 'react-native-reanimated';
 import { useAppStore } from '../store/useAppStore';
 import Feather from 'react-native-vector-icons/Feather';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { SafeAreaView, SafeAreaProvider } from 'react-native-safe-area-context';
+// Document picker loaded lazily to avoid bundler error if the package
+// hasn't been installed yet. We'll prompt the user when missing.
+import type { Attachment } from '../types';
 import type { Envelope } from '../types';
 
 export default function AddTransactionModal({ visible, onClose }: { visible: boolean; onClose: () => void }) {
@@ -29,6 +24,7 @@ export default function AddTransactionModal({ visible, onClose }: { visible: boo
   const [selectedEnvelope, setSelectedEnvelope] = useState<string | undefined>(undefined);
   const [phase, setPhase] = useState<'pick' | 'form'>('pick');
   const [query, setQuery] = useState('');
+  const [attachments, setAttachments] = useState<Attachment[]>([]);
 
   useEffect(() => {
     if (visible) {
@@ -39,10 +35,11 @@ export default function AddTransactionModal({ visible, onClose }: { visible: boo
       setAmount('');
       setNote('');
       setType('expense');
+      setAttachments([]);
     }
   }, [visible]);
 
-  const defaultEnvelope = selectedEnvelope ?? envelopes[0]?.id;
+  const defaultEnvelope = type !== 'income' ? (selectedEnvelope ?? envelopes[0]?.id) : selectedEnvelope;
 
   const canSave = useMemo(() => {
     const v = Number(amount);
@@ -64,8 +61,10 @@ export default function AddTransactionModal({ visible, onClose }: { visible: boo
       exchange_rate_to_base: 1,
       date: now,
       created_at: now,
-      envelope_id: type !== 'income' ? defaultEnvelope : undefined,
+      // Attach envelope for expenses/transfers, and for income only if user picked one
+      envelope_id: type === 'income' ? selectedEnvelope : defaultEnvelope,
       account_id: defaultAccount,
+      attachments: attachments.length ? attachments : undefined,
     });
     onClose();
     setAmount('');
@@ -77,13 +76,23 @@ export default function AddTransactionModal({ visible, onClose }: { visible: boo
 
   return (
     <Modal visible={visible} animationType="slide" presentationStyle="fullScreen" onRequestClose={onClose}>
+      {/* A Modal renders outside the root tree. Wrap it in its own SafeAreaProvider
+          so SafeAreaView receives correct insets on iOS notch devices. */}
+      <SafeAreaProvider>
       <SafeAreaView style={[styles.container, { backgroundColor: theme.background }]} edges={['top','bottom']}> 
-        <Text style={[styles.title, { color: theme.textPrimary }]}>{headerTitle}</Text>
+        <View style={styles.headerRow}>
+          <Text style={[styles.title, { color: theme.textPrimary }]}>{headerTitle}</Text>
+          {phase === 'pick' && (
+            <Pressable onPress={onClose} hitSlop={10} style={{ paddingHorizontal: 8, paddingVertical: 6 }}>
+              <Text style={{ color: colors.light.primary, fontWeight: '700', fontSize: 16 }}>Cancel</Text>
+            </Pressable>
+          )}
+        </View>
         {phase === 'pick' ? (
           <View style={[styles.card, { backgroundColor: theme.surface }]}> 
             <Text style={{ color: theme.textSecondary }}>Type</Text>
             <View style={[styles.row, { marginTop: 8 }]}>
-              {(['expense', 'income', 'transfer'] as const).map(t => (
+              {(['expense', 'income'] as const).map(t => (
                 <Chip key={t} label={t} active={type === t} onPress={() => setType(t)} borderColor={theme.border} />
               ))}
             </View>
@@ -99,7 +108,12 @@ export default function AddTransactionModal({ visible, onClose }: { visible: boo
               />
             </View>
 
-            <CategoryGrid query={query} envelopes={envelopes} onPick={id => { setSelectedEnvelope(id); setPhase('form'); }} />
+            <CategoryGrid
+              type={type}
+              query={query}
+              envelopes={envelopes}
+              onPick={id => { setSelectedEnvelope(id); setPhase('form'); }}
+            />
           </View>
         ) : (
           <View style={[styles.card, { backgroundColor: theme.surface }]}> 
@@ -126,6 +140,17 @@ export default function AddTransactionModal({ visible, onClose }: { visible: boo
               placeholderTextColor={theme.textSecondary}
               style={[styles.input, { color: theme.textPrimary }]}
             />
+
+            <Text style={{ color: theme.textSecondary, marginTop: 12, marginBottom: 6 }}>Attachments</Text>
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ alignItems: 'center' }}>
+              <Pressable onPress={async () => { const items = await pickFiles(); if (items.length) setAttachments(prev => [...prev, ...items]); }} style={[styles.attachBtn]}> 
+                <Feather name="paperclip" size={18} color={theme.textPrimary} />
+                <Text style={{ marginLeft: 6, color: theme.textPrimary, fontWeight: '600' }}>Add</Text>
+              </Pressable>
+              {attachments.map(a => (
+                <AttachmentChip key={a.id} a={a} onRemove={() => setAttachments(prev => prev.filter(x => x.id !== a.id))} />
+              ))}
+            </ScrollView>
           </View>
         )}
 
@@ -143,12 +168,14 @@ export default function AddTransactionModal({ visible, onClose }: { visible: boo
           )}
         </View>
       </SafeAreaView>
+      </SafeAreaProvider>
     </Modal>
   );
 }
 
 const styles = StyleSheet.create({
   container: { flex: 1, padding: 16 },
+  headerRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
   title: { fontSize: 28, fontWeight: '800', marginBottom: 12 },
   card: { padding: 16, borderRadius: 16 },
   input: {
@@ -187,6 +214,7 @@ const styles = StyleSheet.create({
   },
   footer: { marginTop: 'auto', flexDirection: 'row', gap: 12 },
   button: { flex: 1, padding: 16, borderRadius: 12, alignItems: 'center' },
+  attachBtn: { flexDirection: 'row', alignItems: 'center', borderRadius: 999, borderWidth: StyleSheet.hairlineWidth, borderColor: '#CBD5E1', paddingHorizontal: 12, paddingVertical: 8, marginRight: 8 },
 });
 
 function Chip({ label, active, onPress, borderColor }: { label: string; active: boolean; onPress: () => void; borderColor: string }) {
@@ -232,11 +260,25 @@ const SUGGESTED_CATEGORIES: Array<{ name: string; icon: string; color: string }>
   { name: 'Subscriptions', icon: '💳', color: '#8B5CF6' },
 ];
 
+const SUGGESTED_INCOME_CATEGORIES: Array<{ name: string; icon: string; color: string }> = [
+  { name: 'Earned Income', icon: '💼', color: '#22C55E' },
+  { name: 'Profit Income', icon: '📈', color: '#10B981' },
+  { name: 'Interest Income', icon: '🏦', color: '#3B82F6' },
+  { name: 'Dividend Income', icon: '💸', color: '#60A5FA' },
+  { name: 'Rental Income', icon: '🏠', color: '#F59E0B' },
+  { name: 'Capital Gains', icon: '📊', color: '#A855F7' },
+  { name: 'Royalty Income', icon: '🎵', color: '#F97316' },
+  { name: 'Licensing Income', icon: '🧾', color: '#0EA5E9' },
+  { name: 'Portfolio Income', icon: '🧺', color: '#2DD4BF' },
+];
+
 function CategoryGrid({
+  type,
   query,
   envelopes,
   onPick,
 }: {
+  type: 'expense' | 'income' | 'transfer';
   query: string;
   envelopes: Envelope[];
   onPick: (id: string) => void;
@@ -254,7 +296,8 @@ function CategoryGrid({
     .forEach(e => tiles.push({ key: e.id, id: e.id, label: e.name, icon: e.icon, color: e.color }));
 
   // Then suggested categories that aren't present yet
-  SUGGESTED_CATEGORIES.filter(s => s.name.toLowerCase().includes(q)).forEach(s => {
+  const suggestions = type === 'income' ? SUGGESTED_INCOME_CATEGORIES : SUGGESTED_CATEGORIES;
+  suggestions.filter(s => s.name.toLowerCase().includes(q)).forEach(s => {
     if (!existingByName.has(s.name.toLowerCase())) {
       tiles.push({ key: `suggest-${s.name}`, label: s.name, icon: s.icon, color: s.color, createIfNeeded: true });
     }
@@ -292,6 +335,75 @@ function CategoryGrid({
           }}
         />
       ))}
+    </View>
+  );
+}
+
+async function pickFiles() {
+  // Load module lazily so the app still runs if it's not installed
+  let DocumentPicker: any;
+  let isCancelFn: ((e: any) => boolean) | undefined;
+  let pickerTypes: any = undefined;
+  try {
+    const NAME = 'react-native-document' + '-picker';
+    const mod = require(NAME);
+    DocumentPicker = mod.default || mod;
+    isCancelFn = mod.isCancel || DocumentPicker.isCancel;
+    pickerTypes = mod.types || DocumentPicker.types;
+  } catch (e) {
+    Alert.alert(
+      'Attachment Picker Not Installed',
+      'Run "yarn add react-native-document-picker" and then "npx pod-install" (iOS) to enable file attachments.',
+    );
+    return [] as Attachment[];
+  }
+
+  try {
+    // Some iOS versions can be picky about copyTo; cachesDirectory is safest
+    const opts: any = { type: pickerTypes?.allFiles, copyTo: 'cachesDirectory' };
+    const res: any[] = await DocumentPicker.pickMultiple(opts);
+    return res.map((r: any) => ({
+      id: `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+      name: r.name ?? 'Attachment',
+      uri: r.fileCopyUri ?? r.uri,
+      mime: r.type ?? null,
+      size: r.size ?? null,
+    }));
+  } catch (err: any) {
+    if (isCancelFn && isCancelFn(err)) return [] as Attachment[];
+    // Fallback to single-picker if multi not supported in some environments
+    try {
+      const r: any = await DocumentPicker.pick({ type: pickerTypes?.allFiles, copyTo: 'cachesDirectory' });
+      const item: Attachment = {
+        id: `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+        name: r.name ?? 'Attachment',
+        uri: r.fileCopyUri ?? r.uri,
+        mime: r.type ?? null,
+        size: r.size ?? null,
+      };
+      return [item];
+    } catch (err2: any) {
+      if (isCancelFn && isCancelFn(err2)) return [] as Attachment[];
+      Alert.alert('Unable to attach file', err2?.message || err?.message || 'An unexpected error occurred while selecting a file.');
+      return [] as Attachment[];
+    }
+  }
+}
+
+function AttachmentChip({ a, onRemove }: { a: Attachment; onRemove: () => void }) {
+  const ext = a.name.split('.').pop()?.toLowerCase();
+  const isImage = (a.mime || '').startsWith('image/') || ['jpg','jpeg','png','gif','heic','webp'].includes(ext || '');
+  return (
+    <View style={{ flexDirection: 'row', alignItems: 'center', paddingHorizontal: 10, paddingVertical: 8, borderRadius: 999, borderWidth: StyleSheet.hairlineWidth, borderColor: '#CBD5E1', marginRight: 8 }}>
+      {isImage ? (
+        <Image source={{ uri: a.uri }} style={{ width: 24, height: 24, borderRadius: 4, backgroundColor: '#E5E7EB' }} />
+      ) : (
+        <Feather name="file" size={18} color="#111827" />
+      )}
+      <Text numberOfLines={1} style={{ maxWidth: 140, marginLeft: 6 }}>{a.name}</Text>
+      <Pressable onPress={onRemove} hitSlop={10} style={{ marginLeft: 6 }}>
+        <Feather name="x" size={16} color="#6B7280" />
+      </Pressable>
     </View>
   );
 }

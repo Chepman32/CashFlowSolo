@@ -14,5 +14,5 @@ export default class Transaction extends Model {
   @field('envelope_id') envelope_id?: string;
   @field('account_id') account_id!: string;
   @field('transfer_to_account_id') transfer_to_account_id?: string;
+  @field('attachments') attachments?: string; // JSON string
 }
-
