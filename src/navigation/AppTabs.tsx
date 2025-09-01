@@ -2,7 +2,8 @@ import React from 'react';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { NavigationContainer, DefaultTheme, DarkTheme } from '@react-navigation/native';
 import { enableScreens } from 'react-native-screens';
-import { Text, useColorScheme } from 'react-native';
+import { useColorScheme } from 'react-native';
+import Feather from 'react-native-vector-icons/Feather';
 import Dashboard from '../screens/Dashboard';
 import Envelopes from '../screens/Envelopes';
 import Transactions from '../screens/Transactions';
@@ -19,23 +20,50 @@ export type RootTabParamList = {
 
 const Tab = createBottomTabNavigator<RootTabParamList>();
 
-function Icon({ name, focused }: { name: string; focused: boolean }) {
-  return <Text style={{ fontSize: 18, opacity: focused ? 1 : 0.7 }}>{name}</Text>;
+function Icon({ name, focused, color }: { name: string; focused: boolean; color: string }) {
+  return <Feather name={name as any} size={20} color={color} />;
 }
 
 export default function AppTabs() {
   enableScreens(true);
   const isDark = useColorScheme() === 'dark';
+  const activeColor = isDark ? '#14B8A6' : '#14B8A6';
+  const inactiveColor = isDark ? '#9CA3AF' : '#6B7280';
   return (
     <NavigationContainer theme={isDark ? DarkTheme : DefaultTheme}>
       <Tab.Navigator
-        screenOptions={{ headerShown: false, tabBarLabelStyle: { fontSize: 12 } }}
+        screenOptions={{
+          headerShown: false,
+          tabBarLabelStyle: { fontSize: 12 },
+          tabBarActiveTintColor: activeColor,
+          tabBarInactiveTintColor: inactiveColor,
+        }}
       >
-        <Tab.Screen name="Dashboard" component={Dashboard} options={{ tabBarIcon: ({ focused }) => <Icon name="🏠" focused={focused} /> }} />
-        <Tab.Screen name="Envelopes" component={Envelopes as any} options={{ tabBarIcon: ({ focused }) => <Icon name="✉️" focused={focused} /> }} />
-        <Tab.Screen name="Transactions" component={Transactions} options={{ tabBarIcon: ({ focused }) => <Icon name="📋" focused={focused} /> }} />
-        <Tab.Screen name="Challenges" component={Challenges} options={{ tabBarIcon: ({ focused }) => <Icon name="🏆" focused={focused} /> }} />
-        <Tab.Screen name="Settings" component={Settings} options={{ tabBarIcon: ({ focused }) => <Icon name="⚙️" focused={focused} /> }} />
+        <Tab.Screen
+          name="Dashboard"
+          component={Dashboard}
+          options={{ tabBarIcon: ({ focused, color }) => <Icon name="home" focused={focused} color={color} /> }}
+        />
+        <Tab.Screen
+          name="Envelopes"
+          component={Envelopes as any}
+          options={{ tabBarIcon: ({ focused, color }) => <Icon name="mail" focused={focused} color={color} /> }}
+        />
+        <Tab.Screen
+          name="Transactions"
+          component={Transactions}
+          options={{ tabBarIcon: ({ focused, color }) => <Icon name="list" focused={focused} color={color} /> }}
+        />
+        <Tab.Screen
+          name="Challenges"
+          component={Challenges}
+          options={{ tabBarIcon: ({ focused, color }) => <Icon name="award" focused={focused} color={color} /> }}
+        />
+        <Tab.Screen
+          name="Settings"
+          component={Settings}
+          options={{ tabBarIcon: ({ focused, color }) => <Icon name="settings" focused={focused} color={color} /> }}
+        />
       </Tab.Navigator>
     </NavigationContainer>
   );
