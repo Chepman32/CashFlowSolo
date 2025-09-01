@@ -12,6 +12,8 @@ import { colors } from '../theme/colors';
 import Animated, { useAnimatedStyle, useSharedValue, withSpring } from 'react-native-reanimated';
 import { useAppStore } from '../store/useAppStore';
 import Feather from 'react-native-vector-icons/Feather';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import type { Envelope } from '../types';
 
 export default function AddTransactionModal({ visible, onClose }: { visible: boolean; onClose: () => void }) {
   const isDark = useColorScheme() === 'dark';
@@ -75,7 +77,7 @@ export default function AddTransactionModal({ visible, onClose }: { visible: boo
 
   return (
     <Modal visible={visible} animationType="slide" presentationStyle="fullScreen" onRequestClose={onClose}>
-      <View style={[styles.container, { backgroundColor: theme.background }]}> 
+      <SafeAreaView style={[styles.container, { backgroundColor: theme.background }]} edges={['top','bottom']}> 
         <Text style={[styles.title, { color: theme.textPrimary }]}>{headerTitle}</Text>
         {phase === 'pick' ? (
           <View style={[styles.card, { backgroundColor: theme.surface }]}> 
@@ -97,43 +99,7 @@ export default function AddTransactionModal({ visible, onClose }: { visible: boo
               />
             </View>
 
-            <View style={styles.grid}>
-              {envelopes
-                .filter(e => e.name.toLowerCase().includes(query.toLowerCase()))
-                .map(env => (
-                  <CategoryTile
-                    key={env.id}
-                    label={env.name}
-                    color={env.color}
-                    icon={env.icon}
-                    onPress={() => {
-                      setSelectedEnvelope(env.id);
-                      setPhase('form');
-                    }}
-                  />
-                ))}
-              <CategoryTile
-                label="Add New Category"
-                color="#B45309"
-                icon="📚"
-                onPress={() => {
-                  // Quick add a placeholder category
-                  const now = new Date().toISOString();
-                  const id = `env-${Date.now()}`;
-                  useAppStore.getState().addEnvelope({
-                    id,
-                    name: 'New Category',
-                    icon: '🗂️',
-                    color: colors.accents[Math.floor(Math.random() * colors.accents.length)],
-                    budgeted_amount: 0,
-                    budget_interval: 'monthly',
-                    created_at: now,
-                  });
-                  setSelectedEnvelope(id);
-                  setPhase('form');
-                }}
-              />
-            </View>
+            <CategoryGrid query={query} envelopes={envelopes} onPick={id => { setSelectedEnvelope(id); setPhase('form'); }} />
           </View>
         ) : (
           <View style={[styles.card, { backgroundColor: theme.surface }]}> 
@@ -164,16 +130,19 @@ export default function AddTransactionModal({ visible, onClose }: { visible: boo
         )}
 
         <View style={styles.footer}>
-          <Pressable onPress={phase === 'pick' ? onClose : () => setPhase('pick')} style={[styles.button, { backgroundColor: theme.surface, borderColor: theme.border }]}> 
-            <Text style={{ color: theme.textPrimary, fontWeight: '700' }}>{phase === 'pick' ? 'Cancel' : 'Back'}</Text>
+          <Pressable
+            onPress={phase === 'pick' ? onClose : () => setPhase('pick')}
+            style={[styles.button, styles.buttonLarge, { backgroundColor: theme.surface, borderColor: theme.border }]}
+          > 
+            <Text style={[styles.buttonLargeText, { color: theme.textPrimary, fontWeight: '800' }]}>{phase === 'pick' ? 'Cancel' : 'Back'}</Text>
           </Pressable>
           {phase === 'form' && (
-            <Pressable disabled={!canSave} onPress={onSave} style={[styles.button, { backgroundColor: canSave ? colors.light.primary : '#94A3B8' }]}> 
-              <Text style={{ color: 'white', fontWeight: '700' }}>Save</Text>
+            <Pressable disabled={!canSave} onPress={onSave} style={[styles.button, styles.buttonLarge, { backgroundColor: canSave ? colors.light.primary : '#94A3B8' }]}> 
+              <Text style={[styles.buttonLargeText, { color: 'white', fontWeight: '800' }]}>Save</Text>
             </Pressable>
           )}
         </View>
-      </View>
+      </SafeAreaView>
     </Modal>
   );
 }
@@ -196,6 +165,8 @@ const styles = StyleSheet.create({
     borderRadius: 999,
     borderWidth: StyleSheet.hairlineWidth,
   },
+  buttonLarge: { paddingVertical: 18, borderRadius: 16 },
+  buttonLargeText: { fontSize: 18 },
   search: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -243,6 +214,84 @@ function CategoryTile({ label, icon, color, onPress }: { label: string; icon: st
         <Text style={{ fontSize: 32 }}>{icon}</Text>
       </Pressable>
       <Text style={{ marginTop: 8, textAlign: 'center' }}>{label}</Text>
+    </View>
+  );
+}
+
+const SUGGESTED_CATEGORIES: Array<{ name: string; icon: string; color: string }> = [
+  { name: 'Groceries', icon: '🛒', color: '#EF4444' },
+  { name: 'Rent/Utilities', icon: '🏠', color: '#60A5FA' },
+  { name: 'Restaurants', icon: '🍽️', color: '#F97316' },
+  { name: 'Travel', icon: '✈️', color: '#22C55E' },
+  { name: 'Transport', icon: '🚗', color: '#22C55E' },
+  { name: 'Education', icon: '📚', color: '#A855F7' },
+  { name: 'Gifts', icon: '🎁', color: '#3B82F6' },
+  { name: 'Health', icon: '🩺', color: '#EF4444' },
+  { name: 'Entertainment', icon: '🎬', color: '#F59E0B' },
+  { name: 'Shopping', icon: '🛍️', color: '#06B6D4' },
+  { name: 'Subscriptions', icon: '💳', color: '#8B5CF6' },
+];
+
+function CategoryGrid({
+  query,
+  envelopes,
+  onPick,
+}: {
+  query: string;
+  envelopes: Envelope[];
+  onPick: (id: string) => void;
+}) {
+  const q = query.trim().toLowerCase();
+  const existingByName = new Map(
+    envelopes.map(e => [e.name.trim().toLowerCase(), e]),
+  );
+
+  const tiles: Array<{ key: string; label: string; icon: string; color: string; id?: string; createIfNeeded?: boolean }> = [];
+
+  // Show existing envelopes first
+  envelopes
+    .filter(e => e.name.toLowerCase().includes(q))
+    .forEach(e => tiles.push({ key: e.id, id: e.id, label: e.name, icon: e.icon, color: e.color }));
+
+  // Then suggested categories that aren't present yet
+  SUGGESTED_CATEGORIES.filter(s => s.name.toLowerCase().includes(q)).forEach(s => {
+    if (!existingByName.has(s.name.toLowerCase())) {
+      tiles.push({ key: `suggest-${s.name}`, label: s.name, icon: s.icon, color: s.color, createIfNeeded: true });
+    }
+  });
+
+  // Always include "Add New Category"
+  tiles.push({ key: 'add-new', label: 'Add New Category', icon: '📚', color: '#B45309', createIfNeeded: true });
+
+  return (
+    <View style={styles.grid}>
+      {tiles.map(t => (
+        <CategoryTile
+          key={t.key}
+          label={t.label}
+          icon={t.icon}
+          color={t.color}
+          onPress={async () => {
+            if (t.id) {
+              onPick(t.id);
+              return;
+            }
+            // Create if needed
+            const now = new Date().toISOString();
+            const id = `env-${Date.now()}`;
+            await useAppStore.getState().addEnvelope({
+              id,
+              name: t.label === 'Add New Category' ? 'New Category' : t.label,
+              icon: t.label === 'Add New Category' ? '🗂️' : t.icon,
+              color: t.color,
+              budgeted_amount: 0,
+              budget_interval: 'monthly',
+              created_at: now,
+            });
+            onPick(id);
+          }}
+        />
+      ))}
     </View>
   );
 }
