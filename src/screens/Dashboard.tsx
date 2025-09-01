@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import { View, Text, StyleSheet, ScrollView, useColorScheme } from 'react-native';
 import { colors } from '../theme/colors';
 import { useAppStore } from '../store/useAppStore';
@@ -6,6 +6,8 @@ import EnvelopeCard from '../components/EnvelopeCard';
 import TransactionRow from '../components/TransactionRow';
 import { FAB } from '../components/FAB';
 import AddTransactionModal from '../components/AddTransactionModal';
+import RingProgress from '../components/RingProgress';
+import EnvelopeSummaryCard from '../components/EnvelopeSummaryCard';
 
 export default function Dashboard() {
   const isDark = useColorScheme() === 'dark';
@@ -19,6 +21,12 @@ export default function Dashboard() {
     accounts.reduce((sum, a) => sum + a.initial_balance, 0) +
     transactions.reduce((sum, t) => sum + t.amount, 0);
 
+  const totalBudgeted = envelopes.reduce((sum, e) => sum + e.budgeted_amount, 0);
+  const totalSpent = transactions
+    .filter(t => t.type !== 'income')
+    .reduce((sum, t) => sum + Math.abs(Math.min(0, t.amount)), 0);
+  const overallPct = Math.max(0, Math.min(1, totalBudgeted ? totalSpent / totalBudgeted : 0));
+
   function getSpentForEnvelope(id: string) {
     return transactions
       .filter(t => t.envelope_id === id)
@@ -26,51 +34,82 @@ export default function Dashboard() {
       .reduce((sum, t) => sum + Math.abs(Math.min(0, t.amount)), 0);
   }
 
+  const topEnvelope = envelopes[0];
+  const topEnvelopeSpent = topEnvelope ? getSpentForEnvelope(topEnvelope.id) : 0;
+  const topEnvelopePct = topEnvelope ? Math.max(0, Math.min(1, topEnvelopeSpent / Math.max(1, topEnvelope.budgeted_amount))) : 0;
+
+  const largestExpense = useMemo(() => {
+    const exp = transactions.filter(t => t.type === 'expense');
+    if (exp.length === 0) return undefined;
+    return exp.slice().sort((a, b) => Math.abs(b.amount) - Math.abs(a.amount))[0];
+  }, [transactions]);
+
   return (
     <View style={[styles.container]}> 
       <AddTransactionModal visible={showAdd} onClose={() => setShowAdd(false)} />
-      <ScrollView
-        contentContainerStyle={{ padding: 16, paddingBottom: 120 }}
-        showsVerticalScrollIndicator={false}
-      >
-        <Text style={[styles.headerTitle, { color: theme.textPrimary }]}>Dashboard</Text>
-        <View style={[styles.card, { backgroundColor: theme.surface }]}> 
-          <Text style={{ color: theme.textSecondary }}>Total Balance</Text>
-          <Text style={[styles.balance, { color: theme.textPrimary }]}>${totalBalance.toFixed(2)}</Text>
-        </View>
+      <ScrollView contentContainerStyle={{ padding: 16, paddingBottom: 140 }} showsVerticalScrollIndicator={false}>
+        <View style={[styles.screenCard, { backgroundColor: theme.surface }]}> 
+          <Text style={[styles.headerTitle, { color: theme.textPrimary }]}>Dashboard</Text>
 
-        <Text style={[styles.sectionTitle, { color: theme.textPrimary }]}>Envelopes</Text>
-        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 12 }}>
-          {envelopes.map(env => (
-            <View key={env.id} style={{ width: 240 }}>
-              <EnvelopeCard envelope={env} spent={getSpentForEnvelope(env.id)} />
+          <View style={{ flexDirection: 'row', gap: 16, alignItems: 'center', marginBottom: 12 }}>
+            <RingProgress
+              size={140}
+              strokeWidth={18}
+              progress={overallPct}
+              color={colors.accents[1]}
+              trackColor={isDark ? '#1F2937' : '#E6F0FE'}
+            >
+              <Text style={{ fontSize: 28 }}>🛒</Text>
+            </RingProgress>
+            <View style={{ flex: 1 }}>
+              <Text style={{ color: theme.textSecondary, fontSize: 18 }}>Total Balance</Text>
+              <Text style={[styles.balance, { color: theme.textPrimary }]}>${totalBalance.toFixed(2)}</Text>
             </View>
-          ))}
-        </ScrollView>
-
-        {envelopes.length > 0 && (
-          <View style={[styles.card, { backgroundColor: theme.surface }]}> 
-            <Text style={{ color: theme.textPrimary, fontWeight: '700', marginBottom: 8 }}>Budget usage</Text>
-            {envelopes.slice(0, 3).map(env => {
-              const spent = getSpentForEnvelope(env.id);
-              const pct = Math.max(0, Math.min(1, spent / Math.max(1, env.budgeted_amount)));
-              return (
-                <View key={env.id} style={{ marginBottom: 8 }}>
-                  <Text style={{ color: theme.textSecondary, marginBottom: 4, fontSize: 12 }}>{env.name}</Text>
-                  <View style={{ height: 10, backgroundColor: isDark ? '#2A2A2A' : '#E5E7EB', borderRadius: 10 }}>
-                    <View style={{ width: `${pct * 100}%`, backgroundColor: env.color, height: '100%', borderRadius: 10 }} />
-                  </View>
-                </View>
-              );
-            })}
           </View>
-        )}
 
-        <Text style={[styles.sectionTitle, { color: theme.textPrimary, marginTop: 16 }]}>Recent Transactions</Text>
-        <View style={[styles.card, { backgroundColor: theme.surface, paddingHorizontal: 16 }]}> 
-          {transactions.slice(0, 5).map(tx => (
-            <TransactionRow key={tx.id} tx={tx} />
-          ))}
+          <Text style={[styles.sectionTitle, { color: theme.textPrimary }]}>Envelopes</Text>
+          {topEnvelope ? (
+            <EnvelopeSummaryCard envelope={topEnvelope} spent={topEnvelopeSpent} />
+          ) : (
+            <View style={[styles.card, { backgroundColor: theme.surface }]} />
+          )}
+
+          <Text style={[styles.sectionTitle, { color: theme.textPrimary }]}>Budget usage</Text>
+          <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+            <View style={{ flex: 1, gap: 12 }}>
+              {topEnvelope && (
+                <View style={styles.legendRow}>
+                  <View style={[styles.dot, { backgroundColor: topEnvelope.color }]} />
+                  <Text style={{ color: theme.textPrimary }}> {topEnvelope.name}</Text>
+                </View>
+              )}
+              {largestExpense && (
+                <View style={styles.legendRow}>
+                  <View style={[styles.dot, { backgroundColor: colors.accents[2] }]} />
+                  <Text style={{ color: theme.textPrimary }}> {largestExpense.note || 'Shopping trip'}</Text>
+                </View>
+              )}
+            </View>
+            <RingProgress
+              size={110}
+              strokeWidth={14}
+              progress={topEnvelopePct}
+              color={'#EF4444'}
+              trackColor={isDark ? '#1F2937' : '#FEE2E2'}
+            >
+              <Text style={{ fontWeight: '800', color: theme.textPrimary }}>{Math.round(topEnvelopePct * 100)}%</Text>
+            </RingProgress>
+          </View>
+
+          <Text style={[styles.sectionTitle, { color: theme.textPrimary, marginTop: 8 }]}>Recent Transactions</Text>
+          <Text style={{ color: theme.textSecondary, marginBottom: 6 }}>
+            {new Date().toDateString()}
+          </Text>
+          <View style={[styles.card, { backgroundColor: theme.surface, paddingHorizontal: 16 }]}> 
+            {transactions.slice(0, 5).map(tx => (
+              <TransactionRow key={tx.id} tx={tx} />
+            ))}
+          </View>
         </View>
       </ScrollView>
 
@@ -81,12 +120,23 @@ export default function Dashboard() {
 
 const styles = StyleSheet.create({
   container: { flex: 1 },
-  headerTitle: { fontSize: 28, fontWeight: '800', marginBottom: 12 },
+  screenCard: {
+    borderRadius: 20,
+    padding: 16,
+    shadowColor: '#000',
+    shadowOpacity: 0.06,
+    shadowRadius: 16,
+    shadowOffset: { width: 0, height: 6 },
+    elevation: 2,
+  },
+  headerTitle: { fontSize: 32, fontWeight: '800', marginBottom: 12 },
   balance: { fontSize: 32, fontWeight: '800', marginTop: 6 },
   card: {
     padding: 16,
     borderRadius: 16,
     marginBottom: 12,
   },
-  sectionTitle: { fontSize: 18, fontWeight: '700', marginVertical: 8 },
+  sectionTitle: { fontSize: 20, fontWeight: '800', marginVertical: 8 },
+  legendRow: { flexDirection: 'row', alignItems: 'center' },
+  dot: { width: 16, height: 16, borderRadius: 8, marginRight: 8 },
 });
