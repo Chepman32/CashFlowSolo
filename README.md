@@ -1,5 +1,9 @@
 This is a new [**React Native**](https://reactnative.dev) project, bootstrapped using [`@react-native-community/cli`](https://github.com/react-native-community/cli).
 
+# Project Docs
+
+- Software Design Document: `docs/Software-Design-Document-CashFlow-Solo.md`
+
 # Getting Started
 
 > **Note**: Make sure you have completed the [Set Up Your Environment](https://reactnative.dev/docs/set-up-your-environment) guide before proceeding.
@@ -95,3 +99,10 @@ To learn more about React Native, take a look at the following resources:
 - [Learn the Basics](https://reactnative.dev/docs/getting-started) - a **guided tour** of the React Native **basics**.
 - [Blog](https://reactnative.dev/blog) - read the latest official React Native **Blog** posts.
 - [`@facebook/react-native`](https://github.com/facebook/react-native) - the Open Source; GitHub **repository** for React Native.
+# Navigation + Animations Setup
+
+This project uses React Navigation, Gesture Handler, Screens, and Reanimated. After installing packages, remember to:
+
+- iOS: run `bundle exec pod install` in `ios/`
+- Ensure `babel.config.js` includes `react-native-reanimated/plugin` as the last plugin (already configured)
+- Entry file `index.js` must import `'react-native-gesture-handler'` and `'react-native-reanimated'` before app registration (already configured)
