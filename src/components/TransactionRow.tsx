@@ -1,11 +1,11 @@
 import React from 'react';
-import { View, Text, StyleSheet, useColorScheme } from 'react-native';
+import { View, Text, StyleSheet } from 'react-native';
 import { colors } from '../theme/colors';
 import type { Transaction } from '../types';
+import { useAppTheme } from '../theme/ThemeProvider';
 
 export default function TransactionRow({ tx }: { tx: Transaction }) {
-  const isDark = useColorScheme() === 'dark';
-  const theme = isDark ? colors.dark : colors.light;
+  const { colors: theme } = useAppTheme();
   const isIncome = tx.type === 'income';
   const amountColor = isIncome ? '#16A34A' : '#EF4444';
 
@@ -34,4 +34,3 @@ const styles = StyleSheet.create({
   icon: { fontSize: 18 },
   title: { fontSize: 14, fontWeight: '600' },
 });
-

@@ -23,6 +23,7 @@ export async function hydrateFromDB(): Promise<{
         is_pro: settingsModel.is_pro,
         passcode_enabled: settingsModel.passcode_enabled,
         theme: settingsModel.theme as Settings['theme'],
+        language: (settingsModel as any).language || 'en',
       }
     : null;
 
@@ -87,6 +88,8 @@ export async function seedIfEmpty() {
       s.passcode_enabled = false;
       // @ts-ignore
       s.theme = 'system';
+      // @ts-ignore
+      ;(s as any).language = 'en';
     });
 
     // No sample accounts/envelopes/transactions; onboarding will create them.

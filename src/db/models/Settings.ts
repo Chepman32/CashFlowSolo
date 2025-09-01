@@ -8,5 +8,5 @@ export default class Settings extends Model {
   @field('is_pro') is_pro!: boolean;
   @field('passcode_enabled') passcode_enabled!: boolean;
   @field('theme') theme!: string; // 'light' | 'dark' | 'system'
+  @field('language') language?: string; // optional
 }
-

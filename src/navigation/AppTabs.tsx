@@ -2,7 +2,7 @@ import React from 'react';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { NavigationContainer, DefaultTheme, DarkTheme } from '@react-navigation/native';
 import { enableScreens } from 'react-native-screens';
-import { useColorScheme } from 'react-native';
+import { useAppTheme } from '../theme/ThemeProvider';
 import Feather from 'react-native-vector-icons/Feather';
 import Dashboard from '../screens/Dashboard';
 import Envelopes from '../screens/Envelopes';
@@ -26,7 +26,7 @@ function Icon({ name, focused, color }: { name: string; focused: boolean; color:
 
 export default function AppTabs() {
   enableScreens(true);
-  const isDark = useColorScheme() === 'dark';
+  const { isDark } = useAppTheme();
   const activeColor = isDark ? '#14B8A6' : '#14B8A6';
   const inactiveColor = isDark ? '#9CA3AF' : '#6B7280';
   return (

@@ -53,6 +53,8 @@ export const useAppStore = create<AppState>((set, get) => ({
             if (typeof p.passcode_enabled === 'boolean') m.passcode_enabled = p.passcode_enabled;
             // @ts-ignore
             if (p.theme) m.theme = p.theme;
+            // @ts-ignore
+            if (p.language) (m as any).language = p.language;
           });
         }
       });

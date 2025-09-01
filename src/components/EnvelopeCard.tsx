@@ -1,7 +1,8 @@
 import React from 'react';
-import { View, Text, StyleSheet, useColorScheme } from 'react-native';
+import { View, Text, StyleSheet } from 'react-native';
 import { colors } from '../theme/colors';
 import type { Envelope } from '../types';
+import { useAppTheme } from '../theme/ThemeProvider';
 
 export default function EnvelopeCard({
   envelope,
@@ -10,8 +11,7 @@ export default function EnvelopeCard({
   envelope: Envelope;
   spent: number;
 }) {
-  const isDark = useColorScheme() === 'dark';
-  const theme = isDark ? colors.dark : colors.light;
+  const { colors: theme, isDark } = useAppTheme();
   const remaining = envelope.budgeted_amount - spent;
   const pct = Math.max(0, Math.min(1, spent / Math.max(1, envelope.budgeted_amount)));
 
@@ -56,4 +56,3 @@ const styles = StyleSheet.create({
   },
   fill: { height: '100%' },
 });
-

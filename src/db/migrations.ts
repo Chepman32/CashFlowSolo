@@ -13,6 +13,16 @@ export const migrations = schemaMigrations({
         }),
       ],
     },
+    {
+      toVersion: 3,
+      steps: [
+        addColumns({
+          table: 'settings',
+          columns: [
+            { name: 'language', type: 'string', isOptional: true },
+          ],
+        }),
+      ],
+    },
   ],
 });
-

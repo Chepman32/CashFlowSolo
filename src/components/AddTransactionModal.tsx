@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { Modal, View, Text, StyleSheet, TextInput, Pressable, useColorScheme, ScrollView, Image, Alert, Platform, ActionSheetIOS } from 'react-native';
+import { Modal, View, Text, StyleSheet, TextInput, Pressable, ScrollView, Image, Alert, Platform, ActionSheetIOS } from 'react-native';
 import { colors } from '../theme/colors';
 import Animated, { useAnimatedStyle, useSharedValue, withSpring } from 'react-native-reanimated';
 import { useAppStore } from '../store/useAppStore';
@@ -10,13 +10,15 @@ import { launchImageLibrary } from 'react-native-image-picker';
 // hasn't been installed yet. We'll prompt the user when missing.
 import type { Attachment } from '../types';
 import type { Envelope } from '../types';
+import { useAppTheme } from '../theme/ThemeProvider';
+import { useTranslation } from 'react-i18next';
 
 export default function AddTransactionModal({ visible, onClose }: { visible: boolean; onClose: () => void }) {
-  const isDark = useColorScheme() === 'dark';
-  const theme = isDark ? colors.dark : colors.light;
+  const { colors: theme } = useAppTheme();
   const accounts = useAppStore(s => s.accounts);
   const envelopes = useAppStore(s => s.envelopes);
   const addTransaction = useAppStore(s => s.addTransaction);
+  const { t } = useTranslation();
 
   const [amount, setAmount] = useState('');
   const [note, setNote] = useState('');
@@ -73,7 +75,43 @@ export default function AddTransactionModal({ visible, onClose }: { visible: boo
     setType('expense');
   }
 
-  const headerTitle = phase === 'pick' ? 'Category Picker' : 'Add Transaction';
+  const headerTitle = phase === 'pick' ? t('picker.categoryPicker') : t('addTx.title');
+
+  async function chooseAttachment(): Promise<Attachment[]> {
+    if (Platform.OS === 'ios') {
+      return new Promise(resolve => {
+        ActionSheetIOS.showActionSheetWithOptions(
+          {
+            title: t('addTx.attachments'),
+            options: [t('common.cancel'), t('attachments.mediaLibrary'), t('attachments.files')],
+            cancelButtonIndex: 0,
+          },
+          idx => {
+            // Present picker after the ActionSheet finishes dismissing.
+            const run = async () => {
+              if (idx === 1) resolve(await pickFromMediaLibrary());
+              else if (idx === 2) resolve(await pickFiles());
+              else resolve([]);
+            };
+            setTimeout(run, 220);
+          },
+        );
+      });
+    }
+    // Android (and others): simple alert chooser
+    return new Promise(resolve => {
+      Alert.alert(
+        'Add Attachment',
+        'Choose a source',
+        [
+          { text: 'Media Library', onPress: async () => resolve(await pickFromMediaLibrary()) },
+          { text: 'Files', onPress: async () => resolve(await pickFiles()) },
+          { text: 'Cancel', style: 'cancel', onPress: () => resolve([]) },
+        ],
+        { cancelable: true },
+      );
+    });
+  }
 
   return (
     <Modal visible={visible} animationType="slide" presentationStyle="fullScreen" onRequestClose={onClose}>
@@ -85,13 +123,13 @@ export default function AddTransactionModal({ visible, onClose }: { visible: boo
           <Text style={[styles.title, { color: theme.textPrimary }]}>{headerTitle}</Text>
           {phase === 'pick' && (
             <Pressable onPress={onClose} hitSlop={10} style={{ paddingHorizontal: 8, paddingVertical: 6 }}>
-              <Text style={{ color: colors.light.primary, fontWeight: '700', fontSize: 16 }}>Cancel</Text>
+              <Text style={{ color: colors.light.primary, fontWeight: '700', fontSize: 16 }}>{t('common.cancel')}</Text>
             </Pressable>
           )}
         </View>
         {phase === 'pick' ? (
           <View style={[styles.card, { backgroundColor: theme.surface }]}> 
-            <Text style={{ color: theme.textSecondary }}>Type</Text>
+            <Text style={{ color: theme.textSecondary }}>{t('picker.type')}</Text>
             <View style={[styles.row, { marginTop: 8 }]}>
               {(['expense', 'income'] as const).map(t => (
                 <Chip key={t} label={t} active={type === t} onPress={() => setType(t)} borderColor={theme.border} />
@@ -103,7 +141,7 @@ export default function AddTransactionModal({ visible, onClose }: { visible: boo
               <TextInput
                 value={query}
                 onChangeText={setQuery}
-                placeholder="Search categories..."
+                placeholder={t('picker.search')}
                 placeholderTextColor={theme.textSecondary}
                 style={{ flex: 1, marginLeft: 8, color: theme.textPrimary }}
               />
@@ -119,11 +157,9 @@ export default function AddTransactionModal({ visible, onClose }: { visible: boo
         ) : (
           <View style={[styles.card, { backgroundColor: theme.surface }]}> 
             {selectedEnvelope && (
-              <Text style={{ color: theme.textSecondary, marginBottom: 6 }}>
-                Category: {envelopes.find(e => e.id === selectedEnvelope)?.name}
-              </Text>
+              <Text style={{ color: theme.textSecondary, marginBottom: 6 }}>{`Category: ${envelopes.find(e => e.id === selectedEnvelope)?.name}`}</Text>
             )}
-            <Text style={{ color: theme.textSecondary }}>Amount</Text>
+            <Text style={{ color: theme.textSecondary }}>{t('addTx.amount')}</Text>
             <TextInput
               value={amount}
               onChangeText={setAmount}
@@ -133,20 +169,20 @@ export default function AddTransactionModal({ visible, onClose }: { visible: boo
               style={[styles.input, { color: theme.textPrimary }]}
             />
 
-            <Text style={{ color: theme.textSecondary, marginTop: 8 }}>Note</Text>
+            <Text style={{ color: theme.textSecondary, marginTop: 8 }}>{t('addTx.note')}</Text>
             <TextInput
               value={note}
               onChangeText={setNote}
-              placeholder="Optional note"
+              placeholder={t('addTx.note') + ' (optional)'}
               placeholderTextColor={theme.textSecondary}
               style={[styles.input, { color: theme.textPrimary }]}
             />
 
-            <Text style={{ color: theme.textSecondary, marginTop: 12, marginBottom: 6 }}>Attachments</Text>
+            <Text style={{ color: theme.textSecondary, marginTop: 12, marginBottom: 6 }}>{t('addTx.attachments')}</Text>
             <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ alignItems: 'center' }}>
               <Pressable onPress={async () => { const items = await chooseAttachment(); if (items.length) setAttachments(prev => [...prev, ...items]); }} style={[styles.attachBtn]}> 
                 <Feather name="paperclip" size={18} color={theme.textPrimary} />
-                <Text style={{ marginLeft: 6, color: theme.textPrimary, fontWeight: '600' }}>Add</Text>
+                <Text style={{ marginLeft: 6, color: theme.textPrimary, fontWeight: '600' }}>{t('attachments.add')}</Text>
               </Pressable>
               {attachments.map(a => (
                 <AttachmentChip key={a.id} a={a} onRemove={() => setAttachments(prev => prev.filter(x => x.id !== a.id))} />
@@ -160,11 +196,11 @@ export default function AddTransactionModal({ visible, onClose }: { visible: boo
             onPress={phase === 'pick' ? onClose : () => setPhase('pick')}
             style={[styles.button, styles.buttonLarge, { backgroundColor: theme.surface, borderColor: theme.border }]}
           > 
-            <Text style={[styles.buttonLargeText, { color: theme.textPrimary, fontWeight: '800' }]}>{phase === 'pick' ? 'Cancel' : 'Back'}</Text>
+            <Text style={[styles.buttonLargeText, { color: theme.textPrimary, fontWeight: '800' }]}>{phase === 'pick' ? t('common.cancel') : t('common.back')}</Text>
           </Pressable>
           {phase === 'form' && (
             <Pressable disabled={!canSave} onPress={onSave} style={[styles.button, styles.buttonLarge, { backgroundColor: canSave ? colors.light.primary : '#94A3B8' }]}> 
-              <Text style={[styles.buttonLargeText, { color: 'white', fontWeight: '800' }]}>Save</Text>
+              <Text style={[styles.buttonLargeText, { color: 'white', fontWeight: '800' }]}>{t('common.save')}</Text>
             </Pressable>
           )}
         </View>
@@ -424,41 +460,7 @@ async function pickFromMediaLibrary(): Promise<Attachment[]> {
   });
 }
 
-async function chooseAttachment(): Promise<Attachment[]> {
-  if (Platform.OS === 'ios') {
-    return new Promise(resolve => {
-      ActionSheetIOS.showActionSheetWithOptions(
-        {
-          title: 'Add Attachment',
-          options: ['Cancel', 'Media Library', 'Files'],
-          cancelButtonIndex: 0,
-        },
-        idx => {
-          // Present picker after the ActionSheet finishes dismissing.
-          const run = async () => {
-            if (idx === 1) resolve(await pickFromMediaLibrary());
-            else if (idx === 2) resolve(await pickFiles());
-            else resolve([]);
-          };
-          setTimeout(run, 220);
-        },
-      );
-    });
-  }
-  // Android (and others): simple alert chooser
-  return new Promise(resolve => {
-    Alert.alert(
-      'Add Attachment',
-      'Choose a source',
-      [
-        { text: 'Media Library', onPress: async () => resolve(await pickFromMediaLibrary()) },
-        { text: 'Files', onPress: async () => resolve(await pickFiles()) },
-        { text: 'Cancel', style: 'cancel', onPress: () => resolve([]) },
-      ],
-      { cancelable: true },
-    );
-  });
-}
+
 
 function AttachmentChip({ a, onRemove }: { a: Attachment; onRemove: () => void }) {
   const ext = a.name.split('.').pop()?.toLowerCase();

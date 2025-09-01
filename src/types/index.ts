@@ -6,6 +6,7 @@ export interface Settings {
   is_pro: boolean;
   passcode_enabled: boolean;
   theme: 'light' | 'dark' | 'system';
+  language?: string; // e.g., 'en', 'ru', 'es', 'fr', 'de', 'zh', 'ja'
 }
 
 export interface Account {
