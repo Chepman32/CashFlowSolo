@@ -1,10 +1,11 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { Modal, View, Text, StyleSheet, TextInput, Pressable, useColorScheme, ScrollView, Image, Alert } from 'react-native';
+import { Modal, View, Text, StyleSheet, TextInput, Pressable, useColorScheme, ScrollView, Image, Alert, Platform, ActionSheetIOS } from 'react-native';
 import { colors } from '../theme/colors';
 import Animated, { useAnimatedStyle, useSharedValue, withSpring } from 'react-native-reanimated';
 import { useAppStore } from '../store/useAppStore';
 import Feather from 'react-native-vector-icons/Feather';
 import { SafeAreaView, SafeAreaProvider } from 'react-native-safe-area-context';
+import { launchImageLibrary } from 'react-native-image-picker';
 // Document picker loaded lazily to avoid bundler error if the package
 // hasn't been installed yet. We'll prompt the user when missing.
 import type { Attachment } from '../types';
@@ -143,7 +144,7 @@ export default function AddTransactionModal({ visible, onClose }: { visible: boo
 
             <Text style={{ color: theme.textSecondary, marginTop: 12, marginBottom: 6 }}>Attachments</Text>
             <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ alignItems: 'center' }}>
-              <Pressable onPress={async () => { const items = await pickFiles(); if (items.length) setAttachments(prev => [...prev, ...items]); }} style={[styles.attachBtn]}> 
+              <Pressable onPress={async () => { const items = await chooseAttachment(); if (items.length) setAttachments(prev => [...prev, ...items]); }} style={[styles.attachBtn]}> 
                 <Feather name="paperclip" size={18} color={theme.textPrimary} />
                 <Text style={{ marginLeft: 6, color: theme.textPrimary, fontWeight: '600' }}>Add</Text>
               </Pressable>
@@ -339,7 +340,7 @@ function CategoryGrid({
   );
 }
 
-async function pickFiles() {
+async function pickFiles(imagesOnly = false) {
   // Load module lazily so the app still runs if it's not installed
   let DocumentPicker: any;
   let isCancelFn: ((e: any) => boolean) | undefined;
@@ -360,7 +361,7 @@ async function pickFiles() {
 
   try {
     // Some iOS versions can be picky about copyTo; cachesDirectory is safest
-    const opts: any = { type: pickerTypes?.allFiles, copyTo: 'cachesDirectory' };
+    const opts: any = { type: imagesOnly ? (pickerTypes?.images || pickerTypes?.image) : pickerTypes?.allFiles, copyTo: 'cachesDirectory' };
     const res: any[] = await DocumentPicker.pickMultiple(opts);
     return res.map((r: any) => ({
       id: `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
@@ -373,7 +374,7 @@ async function pickFiles() {
     if (isCancelFn && isCancelFn(err)) return [] as Attachment[];
     // Fallback to single-picker if multi not supported in some environments
     try {
-      const r: any = await DocumentPicker.pick({ type: pickerTypes?.allFiles, copyTo: 'cachesDirectory' });
+      const r: any = await DocumentPicker.pick({ type: imagesOnly ? (pickerTypes?.images || pickerTypes?.image) : pickerTypes?.allFiles, copyTo: 'cachesDirectory' });
       const item: Attachment = {
         id: `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
         name: r.name ?? 'Attachment',
@@ -388,6 +389,75 @@ async function pickFiles() {
       return [] as Attachment[];
     }
   }
+}
+
+async function pickFromMediaLibrary(): Promise<Attachment[]> {
+  return new Promise(resolve => {
+    const options: any = {
+      mediaType: 'photo',
+      selectionLimit: 0,
+      includeBase64: false,
+      quality: 1,
+      presentationStyle: 'fullScreen',
+    };
+    launchImageLibrary(options, (response: any) => {
+      if (!response || response.didCancel) return resolve([]);
+      if (response.errorCode) {
+        // Permission denied or unavailable; inform and fall back to images-only Files picker
+        if (response.errorMessage) {
+          Alert.alert('Photos Access', response.errorMessage);
+        }
+        pickFiles(true).then(resolve);
+        return;
+      }
+      const assets: any[] = response.assets || [];
+      resolve(
+        assets.map(a => ({
+          id: `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+          name: a.fileName || 'Image',
+          uri: a.uri,
+          mime: a.type || 'image/*',
+          size: a.fileSize || null,
+        })),
+      );
+    });
+  });
+}
+
+async function chooseAttachment(): Promise<Attachment[]> {
+  if (Platform.OS === 'ios') {
+    return new Promise(resolve => {
+      ActionSheetIOS.showActionSheetWithOptions(
+        {
+          title: 'Add Attachment',
+          options: ['Cancel', 'Media Library', 'Files'],
+          cancelButtonIndex: 0,
+        },
+        idx => {
+          // Present picker after the ActionSheet finishes dismissing.
+          const run = async () => {
+            if (idx === 1) resolve(await pickFromMediaLibrary());
+            else if (idx === 2) resolve(await pickFiles());
+            else resolve([]);
+          };
+          setTimeout(run, 220);
+        },
+      );
+    });
+  }
+  // Android (and others): simple alert chooser
+  return new Promise(resolve => {
+    Alert.alert(
+      'Add Attachment',
+      'Choose a source',
+      [
+        { text: 'Media Library', onPress: async () => resolve(await pickFromMediaLibrary()) },
+        { text: 'Files', onPress: async () => resolve(await pickFiles()) },
+        { text: 'Cancel', style: 'cancel', onPress: () => resolve([]) },
+      ],
+      { cancelable: true },
+    );
+  });
 }
 
 function AttachmentChip({ a, onRemove }: { a: Attachment; onRemove: () => void }) {
