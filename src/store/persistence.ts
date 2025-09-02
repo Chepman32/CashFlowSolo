@@ -70,6 +70,22 @@ export async function hydrateFromDB(): Promise<{
   return { settings, accounts, envelopes, transactions, savings_challenges };
 }
 
+// Function to reset database and create sample data
+export async function resetDatabase() {
+  const db = getDatabase();
+  await db.write(async () => {
+    // Delete all existing data
+    await db.get('transactions').query().destroyAllPermanently();
+    await db.get('envelopes').query().destroyAllPermanently();
+    await db.get('accounts').query().destroyAllPermanently();
+    await db.get('settings').query().destroyAllPermanently();
+    await db.get('savings_challenges').query().destroyAllPermanently();
+  });
+  
+  // Now seed with sample data
+  await seedIfEmpty();
+}
+
 export async function seedIfEmpty() {
   const db = getDatabase();
   const settingsCount = await db.get('settings').query().fetchCount();
@@ -92,6 +108,116 @@ export async function seedIfEmpty() {
       ;(s as any).language = 'en';
     });
 
-    // No sample accounts/envelopes/transactions; onboarding will create them.
+    // Create sample account
+    await db.get('accounts').create(a => {
+      a._raw.id = 'acc-1';
+      // @ts-ignore private assignment for raw id
+      a.name = 'Cash';
+      // @ts-ignore
+      a.icon = '💵';
+      // @ts-ignore
+      a.initial_balance = 500;
+      // @ts-ignore
+      a.created_at = now;
+    });
+
+    // Create sample envelopes
+    await db.get('envelopes').create(e => {
+      e._raw.id = 'env-1';
+      // @ts-ignore private assignment for raw id
+      e.name = 'Groceries';
+      // @ts-ignore
+      e.icon = '🛒';
+      // @ts-ignore
+      e.color = '#EF4444';
+      // @ts-ignore
+      e.budgeted_amount = 500;
+      // @ts-ignore
+      e.budget_interval = 'monthly';
+      // @ts-ignore
+      e.created_at = now;
+    });
+
+    await db.get('envelopes').create(e => {
+      e._raw.id = 'env-2';
+      // @ts-ignore private assignment for raw id
+      e.name = 'Rent/Utilities';
+      // @ts-ignore
+      e.icon = '🏠';
+      // @ts-ignore
+      e.color = '#60A5FA';
+      // @ts-ignore
+      e.budgeted_amount = 1200;
+      // @ts-ignore
+      e.budget_interval = 'monthly';
+      // @ts-ignore
+      e.created_at = now;
+    });
+
+    await db.get('envelopes').create(e => {
+      e._raw.id = 'env-3';
+      // @ts-ignore private assignment for raw id
+      e.name = 'Health';
+      // @ts-ignore
+      e.icon = '🩺';
+      // @ts-ignore
+      e.color = '#EF4444';
+      // @ts-ignore
+      e.budgeted_amount = 200;
+      // @ts-ignore
+      e.budget_interval = 'monthly';
+      // @ts-ignore
+      e.created_at = now;
+    });
+
+    await db.get('envelopes').create(e => {
+      e._raw.id = 'env-4';
+      // @ts-ignore private assignment for raw id
+      e.name = 'Travel';
+      // @ts-ignore
+      e.icon = '✈️';
+      // @ts-ignore
+      e.color = '#22C55E';
+      // @ts-ignore
+      e.budgeted_amount = 300;
+      // @ts-ignore
+      e.budget_interval = 'monthly';
+      // @ts-ignore
+      e.created_at = now;
+    });
+
+    await db.get('envelopes').create(e => {
+      e._raw.id = 'env-5';
+      // @ts-ignore private assignment for raw id
+      e.name = 'Restaurants';
+      // @ts-ignore
+      e.icon = '🍽️';
+      // @ts-ignore
+      e.color = '#F97316';
+      // @ts-ignore
+      e.budgeted_amount = 250;
+      // @ts-ignore
+      e.budget_interval = 'monthly';
+      // @ts-ignore
+      e.created_at = now;
+    });
+
+    await db.get('envelopes').create(e => {
+      e._raw.id = 'env-6';
+      // @ts-ignore private assignment for raw id
+      e.name = 'Entertainment';
+      // @ts-ignore
+      e.icon = '🎬';
+      // @ts-ignore
+      e.color = '#F59E0B';
+      // @ts-ignore
+      e.budgeted_amount = 150;
+      // @ts-ignore
+      e.budget_interval = 'monthly';
+      // @ts-ignore
+      e.created_at = now;
+    });
+
+    // No sample transactions - let users add their own
   });
 }

@@ -2,11 +2,30 @@ import React from 'react';
 import { View, Text, StyleSheet, UIManager, Platform } from 'react-native';
 import Svg, { Circle } from 'react-native-svg';
 
+// Helper function to get color based on percentage
+function getProgressColor(progress: number): string {
+  const percentage = progress * 100; // Convert 0..1 to 0..100
+  
+  if (percentage < 20) {
+    return '#22C55E'; // Light green to green gradient
+  } else if (percentage >= 20 && percentage < 50) {
+    return '#EAB308'; // Light yellow to yellow gradient
+  } else if (percentage >= 50 && percentage < 70) {
+    return '#F97316'; // Light orange to orange gradient
+  } else if (percentage >= 70 && percentage < 90) {
+    return '#EA580C'; // Orange to dark orange gradient
+  } else if (percentage >= 90 && percentage < 100) {
+    return '#EF4444'; // Light red to red gradient
+  } else {
+    return '#DC2626'; // Dark red for 100%
+  }
+}
+
 export default function RingProgress({
   size = 120,
   strokeWidth = 14,
   progress = 0,
-  color = '#3B82F6',
+  color,
   trackColor = '#E5E7EB',
   children,
 }: {
@@ -21,6 +40,9 @@ export default function RingProgress({
   const radius = (size - strokeWidth) / 2;
   const c = 2 * Math.PI * radius;
   const dashOffset = c * (1 - clamped);
+
+  // Use provided color or calculate based on progress
+  const progressColor = color || getProgressColor(clamped);
 
   // If react-native-svg isn't linked (iOS pods not installed yet),
   // avoid rendering <Svg> to prevent the red "Unimplemented component" error.
@@ -61,7 +83,7 @@ export default function RingProgress({
           cx={size / 2}
           cy={size / 2}
           r={radius}
-          stroke={color}
+          stroke={progressColor}
           strokeWidth={strokeWidth}
           strokeLinecap="round"
           fill="none"

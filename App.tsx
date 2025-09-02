@@ -1,7 +1,6 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import { StatusBar, StyleSheet, View, ActivityIndicator, Text } from 'react-native';
 import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
-import { colors } from './src/theme/colors';
 import AppTabs from './src/navigation/AppTabs';
 import { hydrateFromDB, seedIfEmpty } from './src/store/persistence';
 import { useAppStore } from './src/store/useAppStore';
@@ -17,30 +16,32 @@ function InnerApp() {
   const accounts = useAppStore(s => s.accounts);
   const envelopes = useAppStore(s => s.envelopes);
 
-  useEffect(() => {
-    (async () => {
-      try {
-        await seedIfEmpty();
-        const data = await hydrateFromDB();
-        if (data.settings) {
-          setHydrated({
-            settings: data.settings,
-            accounts: data.accounts,
-            envelopes: data.envelopes,
-            transactions: data.transactions,
-            savings_challenges: data.savings_challenges,
-          });
-          if ((data.settings as any).language) {
-            try { i18n.changeLanguage((data.settings as any).language); } catch {}
-          }
+  const initializeApp = useCallback(async () => {
+    try {
+      await seedIfEmpty();
+      const data = await hydrateFromDB();
+      if (data.settings) {
+        setHydrated({
+          settings: data.settings,
+          accounts: data.accounts,
+          envelopes: data.envelopes,
+          transactions: data.transactions,
+          savings_challenges: data.savings_challenges,
+        });
+        if ((data.settings as any).language) {
+          try { i18n.changeLanguage((data.settings as any).language); } catch {}
         }
-      } catch (e) {
-        // noop: falls back to in-memory defaults
-      } finally {
-        setBooted(true);
       }
-    })();
-  }, []);
+    } catch (e) {
+      // noop: falls back to in-memory defaults
+    } finally {
+      setBooted(true);
+    }
+  }, [setHydrated]);
+
+  useEffect(() => {
+    initializeApp();
+  }, [initializeApp]);
 
   return (
     <SafeAreaProvider>

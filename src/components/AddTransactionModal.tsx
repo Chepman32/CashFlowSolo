@@ -1,7 +1,8 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { Modal, View, Text, StyleSheet, TextInput, Pressable, ScrollView, Image, Alert, Platform, ActionSheetIOS } from 'react-native';
+import { Modal, View, Text, StyleSheet, TextInput, Pressable, ScrollView, Image, Alert, Platform, ActionSheetIOS, Dimensions } from 'react-native';
 import { colors } from '../theme/colors';
-import Animated, { useAnimatedStyle, useSharedValue, withSpring } from 'react-native-reanimated';
+import Animated, { useAnimatedStyle, useSharedValue, withSpring, runOnJS } from 'react-native-reanimated';
+import { Gesture, GestureDetector, GestureHandlerRootView } from 'react-native-gesture-handler';
 import { useAppStore } from '../store/useAppStore';
 import Feather from 'react-native-vector-icons/Feather';
 import { SafeAreaView, SafeAreaProvider } from 'react-native-safe-area-context';
@@ -14,6 +15,8 @@ import { useAppTheme } from '../theme/ThemeProvider';
 import { useTranslation } from 'react-i18next';
 import currencyService, { CURRENCIES, type CurrencyCode } from '../services/currencyService';
 import { getTranslatedEnvelopeName } from '../utils/translationHelpers';
+
+const { height: screenHeight } = Dimensions.get('window');
 
 export default function AddTransactionModal({ visible, onClose }: { visible: boolean; onClose: () => void }) {
   const { colors: theme } = useAppTheme();
@@ -33,6 +36,45 @@ export default function AddTransactionModal({ visible, onClose }: { visible: boo
   const [query, setQuery] = useState('');
   const [attachments, setAttachments] = useState<Attachment[]>([]);
 
+  // Gesture handling for swipe-down dismissal
+  const translateY = useSharedValue(0);
+  const [scrollEnabled, setScrollEnabled] = useState(true);
+  const [isDismissing, setIsDismissing] = useState(false);
+  
+  const panGesture = Gesture.Pan()
+    .onStart(() => {
+      // Store initial position
+    })
+    .onUpdate((event) => {
+      // Only allow swipe down when at the top of the scroll or when already swiping
+      if (event.translationY > 0) {
+        translateY.value = Math.max(0, event.translationY);
+        // Disable scroll when swiping down significantly
+        if (event.translationY > 20) {
+          runOnJS(setScrollEnabled)(false);
+        }
+      }
+    })
+    .onEnd((event) => {
+      const shouldDismiss = event.translationY > 100 || event.velocityY > 500;
+      if (shouldDismiss) {
+        runOnJS(setIsDismissing)(true);
+        translateY.value = withSpring(screenHeight, { damping: 20 }, () => {
+          runOnJS(onClose)();
+        });
+      } else {
+        translateY.value = withSpring(0, { damping: 20 });
+        runOnJS(setScrollEnabled)(true);
+      }
+    })
+    .simultaneousWithExternalGesture();
+
+  const animatedStyle = useAnimatedStyle(() => {
+    return {
+      transform: [{ translateY: translateY.value }],
+    };
+  });
+
   useEffect(() => {
     if (visible) {
       // Reset to picker view each time it opens
@@ -44,8 +86,15 @@ export default function AddTransactionModal({ visible, onClose }: { visible: boo
       setType('expense');
       setSelectedCurrency('USD');
       setAttachments([]);
+      // Reset gesture animation
+      translateY.value = 0;
+      setScrollEnabled(true);
+      setIsDismissing(false);
+    } else if (!visible && !isDismissing) {
+      // Reset translateY when modal is hidden (not during swipe dismissal)
+      translateY.value = 0;
     }
-  }, [visible]);
+  }, [visible, translateY, isDismissing]);
 
   const defaultEnvelope = type !== 'income' ? (selectedEnvelope ?? envelopes[0]?.id) : selectedEnvelope;
 
@@ -131,7 +180,12 @@ export default function AddTransactionModal({ visible, onClose }: { visible: boo
       {/* A Modal renders outside the root tree. Wrap it in its own SafeAreaProvider
           so SafeAreaView receives correct insets on iOS notch devices. */}
       <SafeAreaProvider>
-      <SafeAreaView style={[styles.container, { backgroundColor: theme.background }]} edges={['top','bottom']}> 
+        <GestureHandlerRootView style={{ flex: 1 }}>
+          <GestureDetector gesture={panGesture}>
+            <Animated.View style={[{ flex: 1 }, animatedStyle]}>
+              <SafeAreaView style={[styles.container, { backgroundColor: theme.background }]} edges={['top','bottom']}> 
+        {/* Swipe handle indicator */}
+        <View style={styles.swipeHandle} />
         <View style={styles.headerRow}>
           <Text style={[styles.title, { color: theme.textPrimary }]}>{headerTitle}</Text>
           {phase === 'pick' && (
@@ -160,12 +214,19 @@ export default function AddTransactionModal({ visible, onClose }: { visible: boo
               />
             </View>
 
-            <CategoryGrid
-              type={type}
-              query={query}
-              envelopes={envelopes}
-              onPick={id => { setSelectedEnvelope(id); setPhase('form'); }}
-            />
+            <ScrollView 
+              style={{ flex: 1, marginTop: 16 }}
+              showsVerticalScrollIndicator={false}
+              contentContainerStyle={{ paddingBottom: 20 }}
+              scrollEnabled={scrollEnabled}
+            >
+              <CategoryGrid
+                type={type}
+                query={query}
+                envelopes={envelopes}
+                onPick={id => { setSelectedEnvelope(id); setPhase('form'); }}
+              />
+            </ScrollView>
           </View>
         ) : (
           <View style={[styles.card, { backgroundColor: theme.surface }]}> 
@@ -227,7 +288,10 @@ export default function AddTransactionModal({ visible, onClose }: { visible: boo
             </Pressable>
           )}
         </View>
-      </SafeAreaView>
+              </SafeAreaView>
+            </Animated.View>
+          </GestureDetector>
+        </GestureHandlerRootView>
       </SafeAreaProvider>
 
       {/* Currency Picker Modal */}
@@ -326,6 +390,11 @@ const styles = StyleSheet.create({
     flexWrap: 'wrap',
     justifyContent: 'space-between',
   },
+  scrollableGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'space-between',
+  },
   footer: { marginTop: 'auto', flexDirection: 'row', gap: 12 },
   button: { flex: 1, padding: 16, borderRadius: 12, alignItems: 'center' },
   attachBtn: { flexDirection: 'row', alignItems: 'center', borderRadius: 999, borderWidth: StyleSheet.hairlineWidth, borderColor: '#CBD5E1', paddingHorizontal: 12, paddingVertical: 8, marginRight: 8 },
@@ -341,6 +410,15 @@ const styles = StyleSheet.create({
   currencyModalOptionContent: { flexDirection: 'row', alignItems: 'center', flex: 1 },
   currencyModalOptionName: { fontSize: 16, fontWeight: '600', marginBottom: 2 },
   currencyModalOptionCode: { fontSize: 14, fontWeight: '400' },
+  swipeHandle: {
+    width: 40,
+    height: 4,
+    backgroundColor: '#E5E5E5',
+    borderRadius: 2,
+    alignSelf: 'center',
+    marginTop: 8,
+    marginBottom: 8,
+  },
 });
 
 function Chip({ label, active, onPress, borderColor }: { label: string; active: boolean; onPress: () => void; borderColor: string }) {
@@ -434,7 +512,7 @@ function CategoryGrid({
   tiles.push({ key: 'add-new', label: t('categories.newCategory'), icon: '📚', color: '#B45309', createIfNeeded: true });
 
   return (
-    <View style={styles.grid}>
+    <View style={styles.scrollableGrid}>
       {tiles.map(tile => (
         <CategoryTile
           key={tile.key}

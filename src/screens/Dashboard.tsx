@@ -38,7 +38,56 @@ export default function Dashboard() {
       .reduce((sum, t) => sum + Math.abs(Math.min(0, t.amount)), 0);
   }
 
-  const topEnvelope = envelopes[0];
+  // Find the most relevant envelope to display
+  const topEnvelope = useMemo(() => {
+    if (envelopes.length === 0) return null;
+    
+    // Filter out income categories (they shouldn't be the primary focus)
+    const expenseEnvelopes = envelopes.filter(env => {
+      const name = env.name.toLowerCase();
+      return !name.includes('income') && !name.includes('profit') && !name.includes('earned');
+    });
+    
+    if (expenseEnvelopes.length === 0) {
+      // If no expense envelopes, fall back to any envelope
+      const allEnvelopes = envelopes;
+      
+      // First, try to find an envelope with spending (most relevant)
+      const envelopesWithSpending = allEnvelopes
+        .map(env => ({ ...env, spent: getSpentForEnvelope(env.id) }))
+        .filter(env => env.spent > 0)
+        .sort((a, b) => b.spent - a.spent);
+      
+      if (envelopesWithSpending.length > 0) {
+        return envelopesWithSpending[0];
+      }
+      
+      // If no spending, find the envelope with the highest budget
+      const envelopesByBudget = allEnvelopes
+        .map(env => ({ ...env, spent: getSpentForEnvelope(env.id) }))
+        .sort((a, b) => b.budgeted_amount - a.budgeted_amount);
+      
+      return envelopesByBudget[0];
+    }
+    
+    // Use expense envelopes only
+    const expenseEnvelopesWithSpending = expenseEnvelopes
+      .map(env => ({ ...env, spent: getSpentForEnvelope(env.id) }))
+      .filter(env => env.spent > 0)
+      .sort((a, b) => b.spent - a.spent);
+    
+    if (expenseEnvelopesWithSpending.length > 0) {
+      return expenseEnvelopesWithSpending[0];
+    }
+    
+    // If no spending in expense envelopes, find the one with the highest budget
+    const expenseEnvelopesByBudget = expenseEnvelopes
+      .map(env => ({ ...env, spent: getSpentForEnvelope(env.id) }))
+      .sort((a, b) => b.budgeted_amount - a.budgeted_amount);
+    
+    return expenseEnvelopesByBudget[0];
+  }, [envelopes, transactions]);
+
   const topEnvelopeSpent = topEnvelope ? getSpentForEnvelope(topEnvelope.id) : 0;
   const topEnvelopePct = topEnvelope ? Math.max(0, Math.min(1, topEnvelopeSpent / Math.max(1, topEnvelope.budgeted_amount))) : 0;
 
@@ -102,7 +151,6 @@ export default function Dashboard() {
               size={110}
               strokeWidth={14}
               progress={topEnvelopePct}
-              color={'#EF4444'}
               trackColor={isDark ? '#1F2937' : '#FEE2E2'}
             >
               <Text style={{ fontWeight: '800', color: theme.textPrimary }}>{Math.round(topEnvelopePct * 100)}%</Text>

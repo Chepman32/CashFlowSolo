@@ -6,6 +6,7 @@ import Paywall from './Paywall';
 import { useAppTheme } from '../theme/ThemeProvider';
 import { useTranslation } from 'react-i18next';
 import currencyService, { CURRENCIES, type CurrencyCode } from '../services/currencyService';
+import { resetDatabase } from '../store/persistence';
 
 export default function Settings() {
   const { colors: theme } = useAppTheme();
@@ -130,6 +131,47 @@ export default function Settings() {
         <Text style={{ color: theme.textPrimary, fontWeight: '600' }}>{t('settings.passcode')}</Text>
         <Switch value={settings.passcode_enabled} onChange={() => {}} />
       </View>
+
+      <View style={[styles.row, { borderColor: theme.border }]}> 
+        <Text style={{ color: theme.textPrimary, fontWeight: '600' }}>Reset Data</Text>
+        <Pressable 
+          onPress={() => {
+            Alert.alert(
+              'Reset Data',
+              'This will delete all your data and create sample envelopes. This action cannot be undone.',
+              [
+                { text: 'Cancel', style: 'cancel' },
+                { 
+                  text: 'Reset', 
+                  style: 'destructive',
+                  onPress: async () => {
+                    try {
+                      await resetDatabase();
+                      // Reload the app data
+                      const setHydrated = useAppStore.setState;
+                      const data = await import('../store/persistence').then(m => m.hydrateFromDB());
+                      if (data.settings) {
+                        setHydrated({
+                          settings: data.settings,
+                          accounts: data.accounts,
+                          envelopes: data.envelopes,
+                          transactions: data.transactions,
+                          savings_challenges: data.savings_challenges,
+                        });
+                      }
+                    } catch (error) {
+                      Alert.alert('Error', 'Failed to reset data');
+                    }
+                  }
+                }
+              ]
+            );
+          }}
+          style={styles.resetButton}
+        >
+          <Text style={{ color: '#EF4444', fontWeight: '600' }}>Reset</Text>
+        </Pressable>
+      </View>
     </View>
   );
 }
@@ -196,5 +238,12 @@ const styles = StyleSheet.create({
   currencyCode: {
     fontSize: 14,
     fontWeight: '400',
+  },
+  resetButton: {
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: '#EF4444',
   },
 });
