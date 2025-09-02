@@ -144,8 +144,8 @@ export default function AddTransactionModal({ visible, onClose }: { visible: boo
           <View style={[styles.card, { backgroundColor: theme.surface }]}> 
             <Text style={{ color: theme.textSecondary }}>{t('picker.type')}</Text>
             <View style={[styles.row, { marginTop: 8 }]}>
-              {(['expense', 'income'] as const).map(t => (
-                <Chip key={t} label={t} active={type === t} onPress={() => setType(t)} borderColor={theme.border} />
+              {(['expense', 'income'] as const).map(txType => (
+                <Chip key={txType} label={txType} active={type === txType} onPress={() => setType(txType)} borderColor={theme.border} />
               ))}
             </View>
 
@@ -373,14 +373,9 @@ function CategoryTile({ label, icon, color, onPress }: { label: string; icon: st
 }
 
 const getSuggestedCategories = (t: (key: string) => string) => [
-  { name: t('categories.groceries'), icon: '🛒', color: '#EF4444' },
-  { name: t('categories.rentUtilities'), icon: '🏠', color: '#60A5FA' },
-  { name: t('categories.restaurants'), icon: '🍽️', color: '#F97316' },
-  { name: t('categories.travel'), icon: '✈️', color: '#22C55E' },
   { name: t('categories.transport'), icon: '🚗', color: '#22C55E' },
   { name: t('categories.education'), icon: '📚', color: '#A855F7' },
   { name: t('categories.gifts'), icon: '🎁', color: '#3B82F6' },
-  { name: t('categories.health'), icon: '🩺', color: '#EF4444' },
   { name: t('categories.entertainment'), icon: '🎬', color: '#F59E0B' },
   { name: t('categories.shopping'), icon: '🛍️', color: '#06B6D4' },
   { name: t('categories.subscriptions'), icon: '💳', color: '#8B5CF6' },

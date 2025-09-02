@@ -130,6 +130,16 @@ export default function Settings() {
         <Text style={{ color: theme.textPrimary, fontWeight: '600' }}>{t('settings.passcode')}</Text>
         <Switch value={settings.passcode_enabled} onChange={() => {}} />
       </View>
+
+      <View style={[styles.row, { borderColor: theme.border }]}> 
+        <Text style={{ color: theme.textPrimary, fontWeight: '600' }}>{t('settings.notifications')}</Text>
+        <Switch 
+          value={settings.notifications_enabled ?? true} 
+          onChange={async (value) => {
+            await updateSettings({ notifications_enabled: value });
+          }} 
+        />
+      </View>
     </View>
   );
 }

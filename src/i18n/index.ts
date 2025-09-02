@@ -4,7 +4,7 @@ import { initReactI18next } from 'react-i18next';
 const resources = {
   en: { translation: {
     common: { cancel: 'Cancel', back: 'Back', save: 'Save', add: 'Add', totalBalance: 'Total Balance', budgetUsage: 'Budget usage', recentTransactions: 'Recent Transactions', noTransactions: 'No transactions yet', openPoster: 'Open Poster', budgeted: 'Budgeted', spent: 'Spent', remaining: 'Remaining', category: 'Category', optional: 'optional' },
-    settings: { title: 'Settings', base_currency: 'Base currency', theme: 'Theme', language: 'Language', pro: 'Pro', enabled: 'Enabled', free: 'Free', passcode: 'Passcode', upgrade: 'Upgrade to Pro' },
+    settings: { title: 'Settings', base_currency: 'Base currency', theme: 'Theme', language: 'Language', pro: 'Pro', enabled: 'Enabled', free: 'Free', passcode: 'Passcode', notifications: 'Notifications', upgrade: 'Upgrade to Pro' },
     theme: { system: 'System', light: 'Light', dark: 'Dark' },
     picker: { categoryPicker: 'Category Picker', type: 'Type', search: 'Search categories...', addNew: 'Add New Category' },
     addTx: { title: 'Add Transaction', amount: 'Amount', note: 'Note', attachments: 'Attachments', currency: 'Currency', selectCurrency: 'Select Currency', addAttachment: 'Add Attachment', chooseSource: 'Choose a source' },
@@ -45,34 +45,66 @@ const resources = {
       points: 'Points',
       streakDays: 'Streak Days',
       progress: 'Progress',
-      categories: {
-        all: 'All',
-        streak: 'Streaks',
-        transactions: 'Transactions',
-        challenges: 'Challenges',
-        budgeting: 'Budget',
-        special: 'Special'
-      },
+                 categories: {
+             all: 'All',
+             streak: 'Streaks',
+             transactions: 'Transactions',
+             challenges: 'Challenges',
+             budgeting: 'Budget',
+             special: 'Special',
+             savings: 'Savings',
+             debt: 'Debt'
+           },
       availableRewards: 'Available Rewards',
-      achievementNames: {
-        firstTransaction: 'First Step',
-        budgetMaster: 'Budget Master',
-        streakWarrior: 'Streak Warrior',
-        challengeChampion: 'Challenge Champion',
-        wealthBuilder: 'Wealth Builder'
-      },
-      achievementDescriptions: {
-        firstTransaction: 'Create your first transaction',
-        budgetMaster: 'Create 5 envelopes',
-        streakWarrior: 'Maintain a 7-day login streak',
-        challengeChampion: 'Complete 3 savings challenges',
-        wealthBuilder: 'Save 1000 currency units'
-      }
+                 achievementNames: {
+             firstTransaction: 'First Step',
+             budgetMaster: 'Budget Master',
+             streakWarrior: 'Streak Warrior',
+             challengeChampion: 'Challenge Champion',
+             wealthBuilder: 'Wealth Builder',
+             budgetBoss: 'Budget Boss',
+             categoryCutter: 'Category Cutter',
+             streakKeeper: 'Streak Keeper',
+             zeroImpulseWeek: 'Zero-Impulse Week',
+             roundUpHero: 'Round-Up Hero',
+             subscriptionSurgeon: 'Subscription Surgeon',
+             debtCrusher: 'Debt Crusher',
+             emergencyStarter: 'Emergency Starter',
+             cashOnlySprint: 'Cash-Only Sprint',
+             receiptMaster: 'Receipt Master',
+             plannedPurchaser: 'Planned Purchaser',
+             tagTamer: 'Tag Tamer',
+             weekendWarrior: 'Weekend Warrior',
+             groceriesGuru: 'Groceries Guru',
+             goalSmasher: 'Goal Smasher'
+           },
+           achievementDescriptions: {
+             firstTransaction: 'Create your first transaction',
+             budgetMaster: 'Create 5 envelopes',
+             streakWarrior: 'Maintain a 7-day login streak',
+             challengeChampion: 'Complete 3 savings challenges',
+             wealthBuilder: 'Save 1000 currency units',
+             budgetBoss: 'Finish a month at ≤95% of your total budget',
+             categoryCutter: 'Reduce your top-spend category by ≥25% vs last month',
+             streakKeeper: 'Log expenses every day for 14 consecutive days',
+             zeroImpulseWeek: '7 days with no transactions tagged "impulse"',
+             roundUpHero: 'Save $50 (or local equivalent) via round-ups',
+             subscriptionSurgeon: 'Cancel/downgrade at least 2 subscriptions and cut monthly cost by ≥15%',
+             debtCrusher: 'Pay down ≥10% of one debt balance in a single month',
+             emergencyStarter: 'Build an emergency fund equal to 1 month of average expenses',
+             cashOnlySprint: 'Stay within a single cash envelope for 7 days',
+             receiptMaster: 'Attach and categorize 20 receipt photos in a week',
+             plannedPurchaser: 'Complete 5 purchases after a 24-hour cool-off (planned → confirmed)',
+             tagTamer: 'Keep 100% of transactions categorized for an entire month',
+             weekendWarrior: 'For 4 weekends, keep weekend spend ≤ weekday average',
+             groceriesGuru: 'Hit your weekly groceries cap for 4 consecutive weeks',
+             goalSmasher: 'Reach a savings goal at least 7 days before its deadline'
+           }
     },
   }},
   ru: { translation: {
     common: { cancel: 'Отмена', back: 'Назад', save: 'Сохранить', add: 'Добавить', totalBalance: 'Общий баланс', budgetUsage: 'Использование бюджета', recentTransactions: 'Последние транзакции', noTransactions: 'Пока нет транзакций', openPoster: 'Открыть постер', budgeted: 'Запланировано', spent: 'Потрачено', remaining: 'Осталось', category: 'Категория', optional: 'необязательно' },
-    settings: { title: 'Настройки', base_currency: 'Базовая валюта', theme: 'Тема', language: 'Язык', pro: 'Про', enabled: 'Включено', free: 'Бесплатно', passcode: 'Код-пароль', upgrade: 'Перейти на Про' },
+    settings: { title: 'Настройки', base_currency: 'Базовая валюта', theme: 'Тема', language: 'Язык', pro: 'Про', enabled: 'Включено', free: 'Бесплатно', passcode: 'Код-пароль', notifications: 'Уведомления', upgrade: 'Перейти на Про' },
     theme: { system: 'Система', light: 'Светлая', dark: 'Темная' },
     picker: { categoryPicker: 'Выбор категории', type: 'Тип', search: 'Поиск категорий...', addNew: 'Новая категория' },
     addTx: { title: 'Добавить транзакцию', amount: 'Сумма', note: 'Заметка', attachments: 'Вложения', currency: 'Валюта', selectCurrency: 'Выбрать валюту', addAttachment: 'Добавить вложение', chooseSource: 'Выбрать источник' },
@@ -140,7 +172,7 @@ const resources = {
   }},
   es: { translation: {
     common: { cancel: 'Cancelar', back: 'Atrás', save: 'Guardar', add: 'Añadir', totalBalance: 'Balance Total', budgetUsage: 'Uso del presupuesto', recentTransactions: 'Transacciones Recientes', noTransactions: 'Aún no hay transacciones', openPoster: 'Abrir Póster', budgeted: 'Presupuestado', spent: 'Gastado', remaining: 'Restante', category: 'Categoría', optional: 'opcional' },
-    settings: { title: 'Ajustes', base_currency: 'Moneda base', theme: 'Tema', language: 'Idioma', pro: 'Pro', enabled: 'Activado', free: 'Gratis', passcode: 'Código', upgrade: 'Mejorar a Pro' },
+    settings: { title: 'Ajustes', base_currency: 'Moneda base', theme: 'Tema', language: 'Idioma', pro: 'Pro', enabled: 'Activado', free: 'Gratis', passcode: 'Código', notifications: 'Notificaciones', upgrade: 'Mejorar a Pro' },
     theme: { system: 'Sistema', light: 'Claro', dark: 'Oscuro' },
     picker: { categoryPicker: 'Selector de categoría', type: 'Tipo', search: 'Buscar categorías...', addNew: 'Nueva categoría' },
     addTx: { title: 'Añadir transacción', amount: 'Cantidad', note: 'Nota', attachments: 'Adjuntos', currency: 'Moneda', selectCurrency: 'Seleccionar moneda', addAttachment: 'Añadir adjunto', chooseSource: 'Elegir fuente' },
@@ -208,7 +240,7 @@ const resources = {
   }},
   fr: { translation: {
     common: { cancel: 'Annuler', back: 'Retour', save: 'Enregistrer', add: 'Ajouter', totalBalance: 'Solde Total', budgetUsage: 'Utilisation du budget', recentTransactions: 'Transactions Récentes', noTransactions: 'Aucune transaction pour le moment', openPoster: 'Ouvrir l\'Affiche', budgeted: 'Budgétisé', spent: 'Dépensé', remaining: 'Restant', category: 'Catégorie', optional: 'optionnel' },
-    settings: { title: 'Paramètres', base_currency: 'Devise de base', theme: 'Thème', language: 'Langue', pro: 'Pro', enabled: 'Activé', free: 'Gratuit', passcode: 'Code secret', upgrade: 'Passer en Pro' },
+    settings: { title: 'Paramètres', base_currency: 'Devise de base', theme: 'Thème', language: 'Langue', pro: 'Pro', enabled: 'Activé', free: 'Gratuit', passcode: 'Code secret', notifications: 'Notifications', upgrade: 'Passer en Pro' },
     theme: { system: 'Système', light: 'Clair', dark: 'Sombre' },
     picker: { categoryPicker: 'Sélecteur de catégorie', type: 'Type', search: 'Rechercher des catégories...', addNew: 'Nouvelle catégorie' },
     addTx: { title: 'Ajouter une transaction', amount: 'Montant', note: 'Note', attachments: 'Pièces jointes', currency: 'Devise', selectCurrency: 'Sélectionner la devise', addAttachment: 'Ajouter une pièce jointe', chooseSource: 'Choisir la source' },

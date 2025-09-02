@@ -1,6 +1,7 @@
 import { getDatabase } from '../db';
 import { Q } from '@nozbe/watermelondb';
 import type { Achievement, UserAchievement, Reward, AchievementRequirement } from '../types';
+import { notificationService } from './notificationService';
 
 export class GamificationService {
   private db = getDatabase();
@@ -134,48 +135,69 @@ export class GamificationService {
 
   // Обновить прогресс достижения
   async updateProgress(achievementKey: string, newProgress: number) {
-    const existing = await this.db.get('user_achievements').query(
-      Q.where('achievement_key', achievementKey)
-    ).fetch();
+    try {
+      console.log(`GamificationService: Updating progress for ${achievementKey} to ${newProgress}`);
+      
+      const existing = await this.db.get('user_achievements').query(
+        Q.where('achievement_key', achievementKey)
+      ).fetch();
 
-    const achievement = await this.db.get('achievements').query(
-      Q.where('key', achievementKey)
-    ).fetch();
+      const achievement = await this.db.get('achievements').query(
+        Q.where('key', achievementKey)
+      ).fetch();
 
-    if (achievement.length === 0) return;
+      console.log(`Found ${existing.length} existing user achievements`);
+      console.log(`Found ${achievement.length} achievement definitions`);
 
-    const maxProgress = achievement[0].max_progress;
-    const isUnlocked = newProgress >= maxProgress;
-
-    await this.db.write(async () => {
-      if (existing.length > 0) {
-        const userAchievement = existing[0];
-        // @ts-ignore
-        await userAchievement.update(ua => {
-          // @ts-ignore
-          ua.progress = Math.min(newProgress, maxProgress);
-          if (isUnlocked && !ua.unlocked_at) {
-            // @ts-ignore
-            ua.unlocked_at = Date.now();
-          }
-        });
-      } else {
-        await this.db.get('user_achievements').create(model => {
-          // @ts-ignore
-          model.achievement_key = achievementKey;
-          // @ts-ignore
-          model.progress = Math.min(newProgress, maxProgress);
-          if (isUnlocked) {
-            // @ts-ignore
-            model.unlocked_at = Date.now();
-          }
-        });
+      if (achievement.length === 0) {
+        console.log('No achievement found with key:', achievementKey);
+        return;
       }
-    });
 
-    // Если достижение разблокировано, создаем уведомление
-    if (isUnlocked) {
-      await this.createAchievementNotification(achievementKey);
+      const maxProgress = achievement[0].max_progress;
+      const isUnlocked = newProgress >= maxProgress;
+
+      console.log(`Max progress: ${maxProgress}, isUnlocked: ${isUnlocked}`);
+
+      await this.db.write(async () => {
+        if (existing.length > 0) {
+          const userAchievement = existing[0];
+          console.log('Updating existing user achievement');
+          // @ts-ignore
+          await userAchievement.update(ua => {
+            // @ts-ignore
+            ua.progress = Math.min(newProgress, maxProgress);
+            if (isUnlocked && !ua.unlocked_at) {
+              // @ts-ignore
+              ua.unlocked_at = Date.now();
+              console.log('Achievement unlocked!');
+            }
+          });
+        } else {
+          console.log('Creating new user achievement');
+          await this.db.get('user_achievements').create(model => {
+            // @ts-ignore
+            model.achievement_key = achievementKey;
+            // @ts-ignore
+            model.progress = Math.min(newProgress, maxProgress);
+            if (isUnlocked) {
+              // @ts-ignore
+              model.unlocked_at = Date.now();
+              console.log('Achievement unlocked on creation!');
+            }
+          });
+        }
+      });
+
+      // Если достижение разблокировано, создаем уведомление
+      if (isUnlocked) {
+        console.log('Creating achievement notification');
+        await this.createAchievementNotification(achievementKey);
+      }
+      
+      console.log('Achievement progress update completed successfully');
+    } catch (error) {
+      console.error('Error updating achievement progress:', error);
     }
   }
 
@@ -187,22 +209,10 @@ export class GamificationService {
 
       if (!achievement) return;
 
-      await this.db.write(async () => {
-        await this.db.get('notifications').create(model => {
-          // @ts-ignore
-          model.type = 'achievement_unlock';
-          // @ts-ignore
-          model.title = '🏆 Новое достижение!';
-          // @ts-ignore
-          model.message = `Вы разблокировали "${achievement.name}" и заработали ${achievement.points} очков!`;
-          // @ts-ignore
-          model.scheduled_for = Date.now();
-          // @ts-ignore
-          model.delivered = false;
-          // @ts-ignore
-          model.data = JSON.stringify({ achievementKey });
-        });
-      });
+      // Use the notification service to create the notification
+      await notificationService.createAchievementUnlockNotification(achievement.name, achievement.points);
+      
+      console.log(`Achievement notification created for: ${achievement.name}`);
     } catch (error) {
       console.error('Error creating achievement notification:', error);
     }
@@ -377,6 +387,187 @@ export class GamificationService {
         points: 200,
         is_secret: true,
         requirements: { type: 'amount', target: 1000, condition: 'total_savings' },
+      },
+      // New sophisticated achievements
+      {
+        id: '',
+        key: 'budget_boss',
+        name: 'budget_boss',
+        description: 'budget_boss_desc',
+        icon: 'award',
+        category: 'budgeting',
+        max_progress: 1,
+        points: 75,
+        is_secret: false,
+        requirements: { type: 'budget_compliance', target: 95, condition: 'monthly_budget' },
+      },
+      {
+        id: '',
+        key: 'category_cutter',
+        name: 'category_cutter',
+        description: 'category_cutter_desc',
+        icon: 'scissors',
+        category: 'budgeting',
+        max_progress: 25,
+        points: 60,
+        is_secret: false,
+        requirements: { type: 'percentage_reduction', target: 25, condition: 'top_category_spend' },
+      },
+      {
+        id: '',
+        key: 'streak_keeper',
+        name: 'streak_keeper',
+        description: 'streak_keeper_desc',
+        icon: 'calendar',
+        category: 'streak',
+        max_progress: 14,
+        points: 100,
+        is_secret: false,
+        requirements: { type: 'streak', target: 14, condition: 'daily_expenses' },
+      },
+      {
+        id: '',
+        key: 'zero_impulse_week',
+        name: 'zero_impulse_week',
+        description: 'zero_impulse_week_desc',
+        icon: 'shield',
+        category: 'budgeting',
+        max_progress: 7,
+        points: 50,
+        is_secret: false,
+        requirements: { type: 'streak', target: 7, condition: 'no_impulse_spending' },
+      },
+      {
+        id: '',
+        key: 'round_up_hero',
+        name: 'round_up_hero',
+        description: 'round_up_hero_desc',
+        icon: 'plus-circle',
+        category: 'savings',
+        max_progress: 50,
+        points: 80,
+        is_secret: false,
+        requirements: { type: 'amount', target: 50, condition: 'round_up_savings' },
+      },
+      {
+        id: '',
+        key: 'subscription_surgeon',
+        name: 'subscription_surgeon',
+        description: 'subscription_surgeon_desc',
+        icon: 'scissors',
+        category: 'budgeting',
+        max_progress: 2,
+        points: 90,
+        is_secret: false,
+        requirements: { type: 'count', target: 2, condition: 'cancelled_subscriptions' },
+      },
+      {
+        id: '',
+        key: 'debt_crusher',
+        name: 'debt_crusher',
+        description: 'debt_crusher_desc',
+        icon: 'credit-card',
+        category: 'debt',
+        max_progress: 10,
+        points: 120,
+        is_secret: false,
+        requirements: { type: 'percentage', target: 10, condition: 'debt_reduction' },
+      },
+      {
+        id: '',
+        key: 'emergency_starter',
+        name: 'emergency_starter',
+        description: 'emergency_starter_desc',
+        icon: 'shield',
+        category: 'savings',
+        max_progress: 1,
+        points: 150,
+        is_secret: false,
+        requirements: { type: 'amount', target: 1, condition: 'emergency_fund_months' },
+      },
+      {
+        id: '',
+        key: 'cash_only_sprint',
+        name: 'cash_only_sprint',
+        description: 'cash_only_sprint_desc',
+        icon: 'credit-card',
+        category: 'budgeting',
+        max_progress: 7,
+        points: 70,
+        is_secret: false,
+        requirements: { type: 'streak', target: 7, condition: 'cash_only_envelope' },
+      },
+      {
+        id: '',
+        key: 'receipt_master',
+        name: 'receipt_master',
+        description: 'receipt_master_desc',
+        icon: 'camera',
+        category: 'transactions',
+        max_progress: 20,
+        points: 60,
+        is_secret: false,
+        requirements: { type: 'count', target: 20, condition: 'receipt_attachments' },
+      },
+      {
+        id: '',
+        key: 'planned_purchaser',
+        name: 'planned_purchaser',
+        description: 'planned_purchaser_desc',
+        icon: 'clock',
+        category: 'budgeting',
+        max_progress: 5,
+        points: 85,
+        is_secret: false,
+        requirements: { type: 'count', target: 5, condition: 'planned_purchases' },
+      },
+      {
+        id: '',
+        key: 'tag_tamer',
+        name: 'tag_tamer',
+        description: 'tag_tamer_desc',
+        icon: 'tag',
+        category: 'transactions',
+        max_progress: 30,
+        points: 100,
+        is_secret: false,
+        requirements: { type: 'streak', target: 30, condition: 'fully_categorized' },
+      },
+      {
+        id: '',
+        key: 'weekend_warrior',
+        name: 'weekend_warrior',
+        description: 'weekend_warrior_desc',
+        icon: 'calendar',
+        category: 'budgeting',
+        max_progress: 4,
+        points: 110,
+        is_secret: false,
+        requirements: { type: 'count', target: 4, condition: 'weekend_spending_control' },
+      },
+      {
+        id: '',
+        key: 'groceries_guru',
+        name: 'groceries_guru',
+        description: 'groceries_guru_desc',
+        icon: 'shopping-bag',
+        category: 'budgeting',
+        max_progress: 4,
+        points: 95,
+        is_secret: false,
+        requirements: { type: 'streak', target: 4, condition: 'groceries_budget' },
+      },
+      {
+        id: '',
+        key: 'goal_smasher',
+        name: 'goal_smasher',
+        description: 'goal_smasher_desc',
+        icon: 'target',
+        category: 'savings',
+        max_progress: 7,
+        points: 130,
+        is_secret: false,
+        requirements: { type: 'days_early', target: 7, condition: 'savings_goal' },
       },
     ];
   }

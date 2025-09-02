@@ -27,6 +27,8 @@ type AppState = {
   claimReward: (rewardId: string) => Promise<void>;
   checkAndUpdateStreak: () => Promise<void>;
   initializeGamification: () => Promise<void>;
+  checkForTransactionAchievements: () => Promise<void>;
+  checkForEnvelopeAchievements: () => Promise<void>;
 };
 
 function initialState(theme: Settings['theme']): Omit<AppState, 'addTransaction' | 'addEnvelope' | 'addAccount' | 'toggleChallengeKey' | 'loadAchievements' | 'loadUserAchievements' | 'loadRewards' | 'loadNotifications' | 'updateAchievementProgress' | 'claimReward' | 'checkAndUpdateStreak' | 'initializeGamification'> {
@@ -115,7 +117,12 @@ export const useAppStore = create<AppState>((set, get) => ({
           model.attachments = t.attachments ? JSON.stringify(t.attachments) : null;
         });
       });
-    } catch {}
+
+      // Check for achievements after transaction is created
+      await get().checkForTransactionAchievements();
+    } catch (error) {
+      console.error('Error adding transaction:', error);
+    }
   },
   addEnvelope: async e => {
     set(state => ({ envelopes: [e, ...state.envelopes] }));
@@ -137,7 +144,12 @@ export const useAppStore = create<AppState>((set, get) => ({
           model.created_at = new Date(e.created_at).getTime();
         });
       });
-    } catch {}
+
+      // Check for envelope-related achievements
+      await get().checkForEnvelopeAchievements();
+    } catch (error) {
+      console.error('Error adding envelope:', error);
+    }
   },
   addAccount: async a => {
     set(state => ({ accounts: [a, ...state.accounts] }));
@@ -184,6 +196,63 @@ export const useAppStore = create<AppState>((set, get) => ({
     await get().loadAchievements();
     await get().loadUserAchievements();
     await get().loadRewards();
+    
+    // Check for existing achievements that might have been missed
+    await get().checkForTransactionAchievements();
+    await get().checkForEnvelopeAchievements();
+  },
+
+  // Check for achievements when transactions are created
+  checkForTransactionAchievements: async () => {
+    try {
+      console.log('Checking for transaction achievements...');
+      const db = getDatabase();
+      const transactions = await db.get('transactions').query().fetch();
+      const envelopes = await db.get('envelopes').query().fetch();
+      
+      console.log('Current transactions count:', transactions.length);
+      console.log('Current envelopes count:', envelopes.length);
+      
+      // Check first transaction achievement
+      if (transactions.length === 1) {
+        console.log('Unlocking first_transaction achievement!');
+        await get().updateAchievementProgress('first_transaction', 1);
+      }
+      
+      // Check budget master achievement (5 envelopes)
+      if (envelopes.length >= 5) {
+        console.log('Unlocking budget_master achievement!');
+        await get().updateAchievementProgress('budget_master', envelopes.length);
+      }
+      
+      // Check wealth builder achievement (total savings)
+      const totalSavings = transactions
+        .filter(tx => tx.type === 'income')
+        .reduce((sum, tx) => sum + Math.abs(tx.amount), 0);
+      
+      console.log('Total savings:', totalSavings);
+      
+      if (totalSavings >= 1000) {
+        console.log('Unlocking wealth_builder achievement!');
+        await get().updateAchievementProgress('wealth_builder', Math.floor(totalSavings / 100));
+      }
+    } catch (error) {
+      console.error('Error checking transaction achievements:', error);
+    }
+  },
+
+  checkForEnvelopeAchievements: async () => {
+    try {
+      const db = getDatabase();
+      const envelopes = await db.get('envelopes').query().fetch();
+      
+      // Check budget master achievement (5 envelopes)
+      if (envelopes.length >= 5) {
+        await get().updateAchievementProgress('budget_master', envelopes.length);
+      }
+    } catch (error) {
+      console.error('Error checking envelope achievements:', error);
+    }
   },
 
   loadAchievements: async () => {
@@ -207,9 +276,11 @@ export const useAppStore = create<AppState>((set, get) => ({
   },
 
   updateAchievementProgress: async (achievementKey, progress) => {
+    console.log(`Updating achievement progress: ${achievementKey} = ${progress}`);
     await gamificationService.updateProgress(achievementKey, progress);
     await get().loadUserAchievements();
     await get().loadNotifications();
+    console.log('Achievement progress updated successfully');
   },
 
   claimReward: async (rewardId) => {

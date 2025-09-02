@@ -1,6 +1,7 @@
 import { getDatabase } from '../db';
 import { Q } from '@nozbe/watermelondb';
 import type { AppNotification } from '../types';
+import notifee, { AndroidImportance, AndroidStyle } from '@notifee/react-native';
 
 export class NotificationService {
   private db = getDatabase();
@@ -97,14 +98,66 @@ export class NotificationService {
 
   // Проверить и показать уведомления
   async checkAndShowNotifications() {
-    const pendingNotifications = await this.getPendingNotifications();
+    try {
+      const pendingNotifications = await this.getPendingNotifications();
 
-    for (const notification of pendingNotifications) {
-      // Здесь будет логика показа уведомления через системные уведомления
-      console.log('Показать уведомление:', notification);
+      for (const notification of pendingNotifications) {
+        // Check if notifications are enabled in settings
+        const settings = await this.db.get('settings').query().fetch();
+        const notificationsEnabled = settings[0]?.notifications_enabled ?? true;
 
-      // Отмечаем как доставленное
-      await this.markAsDelivered(notification.id);
+        if (!notificationsEnabled) {
+          console.log('Notifications are disabled, skipping notification');
+          await this.markAsDelivered(notification.id);
+          continue;
+        }
+
+        // Show the notification using notifee
+        await this.displayNotification(notification);
+
+        // Mark as delivered
+        await this.markAsDelivered(notification.id);
+      }
+    } catch (error) {
+      console.error('Error checking and showing notifications:', error);
+    }
+  }
+
+  // Display a notification using notifee
+  private async displayNotification(notification: AppNotification) {
+    try {
+      // Create notification channel for Android
+      const channelId = await notifee.createChannel({
+        id: 'achievements',
+        name: 'Achievements',
+        importance: AndroidImportance.HIGH,
+        sound: 'default',
+      });
+
+      // Display the notification
+      await notifee.displayNotification({
+        title: notification.title,
+        body: notification.message,
+        android: {
+          channelId,
+          importance: AndroidImportance.HIGH,
+          pressAction: {
+            id: 'default',
+          },
+        },
+        ios: {
+          foregroundPresentationOptions: {
+            badge: true,
+            sound: true,
+            banner: true,
+            list: true,
+          },
+        },
+      });
+
+      console.log('Notification displayed:', notification.title);
+    } catch (error) {
+      console.error('Error displaying notification:', error);
     }
   }
 

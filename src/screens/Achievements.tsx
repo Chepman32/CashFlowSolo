@@ -27,6 +27,8 @@ export default function Achievements() {
 
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
   const [showRewardModal, setShowRewardModal] = useState(false);
+  const [selectedAchievement, setSelectedAchievement] = useState<any>(null);
+  const [showAchievementModal, setShowAchievementModal] = useState(false);
 
   useEffect(() => {
     const loadData = async () => {
@@ -56,6 +58,10 @@ export default function Achievements() {
         return 'users';
       case 'special':
         return 'star';
+      case 'savings':
+        return 'piggy-bank';
+      case 'debt':
+        return 'credit-card';
       default:
         return 'award';
     }
@@ -69,6 +75,21 @@ export default function Achievements() {
     if (nameKey === 'streak_warrior') return t('achievements.achievementNames.streakWarrior');
     if (nameKey === 'challenge_champion') return t('achievements.achievementNames.challengeChampion');
     if (nameKey === 'wealth_builder') return t('achievements.achievementNames.wealthBuilder');
+    if (nameKey === 'budget_boss') return t('achievements.achievementNames.budgetBoss');
+    if (nameKey === 'category_cutter') return t('achievements.achievementNames.categoryCutter');
+    if (nameKey === 'streak_keeper') return t('achievements.achievementNames.streakKeeper');
+    if (nameKey === 'zero_impulse_week') return t('achievements.achievementNames.zeroImpulseWeek');
+    if (nameKey === 'round_up_hero') return t('achievements.achievementNames.roundUpHero');
+    if (nameKey === 'subscription_surgeon') return t('achievements.achievementNames.subscriptionSurgeon');
+    if (nameKey === 'debt_crusher') return t('achievements.achievementNames.debtCrusher');
+    if (nameKey === 'emergency_starter') return t('achievements.achievementNames.emergencyStarter');
+    if (nameKey === 'cash_only_sprint') return t('achievements.achievementNames.cashOnlySprint');
+    if (nameKey === 'receipt_master') return t('achievements.achievementNames.receiptMaster');
+    if (nameKey === 'planned_purchaser') return t('achievements.achievementNames.plannedPurchaser');
+    if (nameKey === 'tag_tamer') return t('achievements.achievementNames.tagTamer');
+    if (nameKey === 'weekend_warrior') return t('achievements.achievementNames.weekendWarrior');
+    if (nameKey === 'groceries_guru') return t('achievements.achievementNames.groceriesGuru');
+    if (nameKey === 'goal_smasher') return t('achievements.achievementNames.goalSmasher');
     return achievement.name; // Fallback to original name
   };
 
@@ -80,7 +101,34 @@ export default function Achievements() {
     if (descKey === 'streak_warrior_desc') return t('achievements.achievementDescriptions.streakWarrior');
     if (descKey === 'challenge_champion_desc') return t('achievements.achievementDescriptions.challengeChampion');
     if (descKey === 'wealth_builder_desc') return t('achievements.achievementDescriptions.wealthBuilder');
+    if (descKey === 'budget_boss_desc') return t('achievements.achievementDescriptions.budgetBoss');
+    if (descKey === 'category_cutter_desc') return t('achievements.achievementDescriptions.categoryCutter');
+    if (descKey === 'streak_keeper_desc') return t('achievements.achievementDescriptions.streakKeeper');
+    if (descKey === 'zero_impulse_week_desc') return t('achievements.achievementDescriptions.zeroImpulseWeek');
+    if (descKey === 'round_up_hero_desc') return t('achievements.achievementDescriptions.roundUpHero');
+    if (descKey === 'subscription_surgeon_desc') return t('achievements.achievementDescriptions.subscriptionSurgeon');
+    if (descKey === 'debt_crusher_desc') return t('achievements.achievementDescriptions.debtCrusher');
+    if (descKey === 'emergency_starter_desc') return t('achievements.achievementDescriptions.emergencyStarter');
+    if (descKey === 'cash_only_sprint_desc') return t('achievements.achievementDescriptions.cashOnlySprint');
+    if (descKey === 'receipt_master_desc') return t('achievements.achievementDescriptions.receiptMaster');
+    if (descKey === 'planned_purchaser_desc') return t('achievements.achievementDescriptions.plannedPurchaser');
+    if (descKey === 'tag_tamer_desc') return t('achievements.achievementDescriptions.tagTamer');
+    if (descKey === 'weekend_warrior_desc') return t('achievements.achievementDescriptions.weekendWarrior');
+    if (descKey === 'groceries_guru_desc') return t('achievements.achievementDescriptions.groceriesGuru');
+    if (descKey === 'goal_smasher_desc') return t('achievements.achievementDescriptions.goalSmasher');
     return achievement.description; // Fallback to original description
+  };
+
+  // Handle achievement tap
+  const handleAchievementTap = (achievement: any) => {
+    setSelectedAchievement(achievement);
+    setShowAchievementModal(true);
+  };
+
+  // Handle modal close
+  const handleModalClose = () => {
+    setShowAchievementModal(false);
+    setSelectedAchievement(null);
   };
 
   // Get icon color based on achievement status
@@ -193,6 +241,8 @@ export default function Achievements() {
           { key: 'challenges', label: t('achievements.categories.challenges'), icon: 'target' },
           { key: 'budgeting', label: t('achievements.categories.budgeting'), icon: 'pie-chart' },
           { key: 'special', label: t('achievements.categories.special'), icon: 'star' },
+          { key: 'savings', label: t('achievements.categories.savings'), icon: 'piggy-bank' },
+          { key: 'debt', label: t('achievements.categories.debt'), icon: 'credit-card' },
         ].map(category => (
           <Pressable
             key={category.key}
@@ -250,7 +300,7 @@ export default function Achievements() {
                   }
                 ]}
                 onPress={() => {
-                  // Show achievement details modal
+                  handleAchievementTap(achievement);
                 }}
               >
                 <View style={styles.achievementIconContainer}>
@@ -281,7 +331,7 @@ export default function Achievements() {
                         styles.progressFill,
                         { 
                           width: `${progressPercentage}%`,
-                          backgroundColor: isUnlocked ? colors.light.primary : colors.light.secondary
+                          backgroundColor: isUnlocked ? colors.light.primary : colors.light.textSecondary
                         }
                       ]}
                     />
@@ -312,6 +362,91 @@ export default function Achievements() {
           ))}
         </View>
       )}
+
+      {/* Achievement details modal */}
+      <Modal
+        visible={showAchievementModal}
+        transparent
+        animationType="slide"
+        onRequestClose={handleModalClose}
+      >
+        <View style={styles.modalOverlay}>
+          <Pressable style={styles.modalOverlay} onPress={handleModalClose} />
+          <View style={styles.modalContainer}>
+            {/* Swipe indicator */}
+            <View style={styles.swipeIndicator} />
+            
+            {selectedAchievement && (
+              <View style={[styles.achievementModalContent, { backgroundColor: theme.surface }]}>
+                {/* Achievement icon */}
+                <View style={styles.modalIconContainer}>
+                  <Icon
+                    name={getAchievementIcon(selectedAchievement.category) as any}
+                    size={80}
+                    color={getIconColor(selectedAchievement, user_achievements.find(ua => ua.achievement_key === selectedAchievement.key))}
+                  />
+                  {user_achievements.find(ua => ua.achievement_key === selectedAchievement.key)?.unlocked_at && (
+                    <View style={styles.modalUnlockedBadge}>
+                      <Icon name="check" size={24} color="white" />
+                    </View>
+                  )}
+                </View>
+
+                {/* Achievement name */}
+                <Text style={[styles.modalTitle, { color: theme.textPrimary }]}>
+                  {getAchievementName(selectedAchievement)}
+                </Text>
+
+                {/* Achievement description */}
+                <Text style={[styles.modalDescription, { color: theme.textSecondary }]}>
+                  {getAchievementDescription(selectedAchievement)}
+                </Text>
+
+                {/* Points */}
+                <View style={styles.modalPointsContainer}>
+                  <Icon name="star" size={20} color={colors.light.primary} />
+                  <Text style={[styles.modalPoints, { color: colors.light.primary }]}>
+                    {selectedAchievement.points} {t('achievements.points')}
+                  </Text>
+                </View>
+
+                {/* Progress */}
+                <View style={styles.modalProgressContainer}>
+                  <View style={styles.modalProgressHeader}>
+                    <Text style={[styles.modalProgressLabel, { color: theme.textSecondary }]}>
+                      {t('achievements.progress')}
+                    </Text>
+                    <Text style={[styles.modalProgressText, { color: theme.textPrimary }]}>
+                      {user_achievements.find(ua => ua.achievement_key === selectedAchievement.key)?.progress || 0}/{selectedAchievement.max_progress}
+                    </Text>
+                  </View>
+                  <View style={styles.modalProgressBar}>
+                    <View
+                      style={[
+                        styles.modalProgressFill,
+                        {
+                          width: `${Math.min(((user_achievements.find(ua => ua.achievement_key === selectedAchievement.key)?.progress || 0) / selectedAchievement.max_progress) * 100, 100)}%`,
+                                                     backgroundColor: user_achievements.find(ua => ua.achievement_key === selectedAchievement.key)?.unlocked_at ? colors.light.primary : colors.light.textSecondary
+                        }
+                      ]}
+                    />
+                  </View>
+                </View>
+
+                {/* Close button */}
+                <Pressable
+                  style={[styles.modalCloseButton, { backgroundColor: theme.surface }]}
+                  onPress={handleModalClose}
+                >
+                  <Text style={[styles.modalCloseText, { color: theme.textPrimary }]}>
+                    {t('common.back')}
+                  </Text>
+                </Pressable>
+              </View>
+            )}
+          </View>
+        </View>
+      </Modal>
 
       {/* Reward claimed modal */}
       <Modal
@@ -463,8 +598,7 @@ const styles = StyleSheet.create({
   modalOverlay: {
     flex: 1,
     backgroundColor: 'rgba(0,0,0,0.5)',
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: 'flex-end',
   },
   modalContent: {
     margin: 20,
@@ -495,6 +629,93 @@ const styles = StyleSheet.create({
   },
   modalButtonText: {
     color: 'white',
+    fontSize: 16,
+    fontWeight: '600',
+  },
+  // Achievement modal specific styles
+  modalContainer: {
+    backgroundColor: 'transparent',
+    justifyContent: 'flex-end',
+  },
+  swipeIndicator: {
+    width: 40,
+    height: 4,
+    backgroundColor: 'rgba(255, 255, 255, 0.3)',
+    borderRadius: 2,
+    alignSelf: 'center',
+    marginVertical: 10,
+  },
+  achievementModalContent: {
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
+    padding: 24,
+    alignItems: 'center',
+    minHeight: 400,
+  },
+  modalIconContainer: {
+    position: 'relative',
+    marginBottom: 20,
+  },
+  modalUnlockedBadge: {
+    position: 'absolute',
+    top: -8,
+    right: -8,
+    backgroundColor: colors.light.primary,
+    borderRadius: 16,
+    width: 32,
+    height: 32,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  modalDescription: {
+    fontSize: 16,
+    textAlign: 'center',
+    marginBottom: 20,
+    lineHeight: 22,
+  },
+  modalPointsContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 24,
+  },
+  modalPoints: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    marginLeft: 8,
+  },
+  modalProgressContainer: {
+    width: '100%',
+    marginBottom: 24,
+  },
+  modalProgressHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginBottom: 8,
+  },
+  modalProgressLabel: {
+    fontSize: 14,
+  },
+  modalProgressText: {
+    fontSize: 14,
+    fontWeight: '600',
+  },
+  modalProgressBar: {
+    height: 8,
+    backgroundColor: colors.light.textSecondary,
+    borderRadius: 4,
+  },
+  modalProgressFill: {
+    height: '100%',
+    borderRadius: 4,
+  },
+  modalCloseButton: {
+    paddingHorizontal: 24,
+    paddingVertical: 12,
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: 'rgba(0, 0, 0, 0.1)',
+  },
+  modalCloseText: {
     fontSize: 16,
     fontWeight: '600',
   },
