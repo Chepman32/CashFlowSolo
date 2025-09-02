@@ -22,7 +22,8 @@ export default function Paywall({ onClose }: { onClose: () => void }) {
         {[
           'Unlimited Accounts & Envelopes',
           'What-If Simulator',
-          'Multiple Savings Challenges',
+          'Advanced Achievement System',
+          'Daily Rewards & Streaks',
           'Advanced reports & CSV export',
           'App lock & custom app icon',
         ].map(line => (

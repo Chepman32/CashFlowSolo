@@ -8,14 +8,14 @@ import Feather from 'react-native-vector-icons/Feather';
 import Dashboard from '../screens/Dashboard';
 import Envelopes from '../screens/Envelopes';
 import Transactions from '../screens/Transactions';
-import Challenges from '../screens/Challenges';
+import Achievements from '../screens/Achievements';
 import Settings from '../screens/Settings';
 
 export type RootTabParamList = {
   Dashboard: undefined;
   Envelopes: undefined;
   Transactions: undefined;
-  Challenges: undefined;
+  Achievements: undefined;
   Settings: undefined;
 };
 
@@ -66,10 +66,10 @@ export default function AppTabs() {
           }}
         />
         <Tab.Screen
-          name="Challenges"
-          component={Challenges}
+          name="Achievements"
+          component={Achievements}
           options={{
-            tabBarLabel: t('tabs.challenges'),
+            tabBarLabel: t('tabs.achievements'),
             tabBarIcon: ({ focused, color }) => <Icon name="award" focused={focused} color={color} />
           }}
         />

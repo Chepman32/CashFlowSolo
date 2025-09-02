@@ -7,6 +7,10 @@ import Envelope from './models/Envelope';
 import Transaction from './models/Transaction';
 import Settings from './models/Settings';
 import SavingsChallenge from './models/SavingsChallenge';
+import Achievement from './models/Achievement';
+import UserAchievement from './models/UserAchievement';
+import Reward from './models/Reward';
+import AppNotification from './models/AppNotification';
 
 let dbInstance: Database | null = null;
 
@@ -19,7 +23,17 @@ export function getDatabase() {
 
     dbInstance = new Database({
       adapter,
-      modelClasses: [Account, Envelope, Transaction, Settings, SavingsChallenge],
+      modelClasses: [
+        Account, 
+        Envelope, 
+        Transaction, 
+        Settings, 
+        SavingsChallenge,
+        Achievement,
+        UserAchievement,
+        Reward,
+        AppNotification,
+      ],
     });
   }
   return dbInstance!;

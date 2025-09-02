@@ -1,7 +1,7 @@
 import { create } from 'zustand';
 import { getDatabase } from '../db';
-import { colors } from '../theme/colors';
-import type { Account, Envelope, SavingsChallenge, Settings, Transaction } from '../types';
+import type { Account, Envelope, SavingsChallenge, Settings, Transaction, Achievement, UserAchievement, Reward, AppNotification } from '../types';
+import { gamificationService } from '../services/gamificationService';
 
 type AppState = {
   settings: Settings;
@@ -9,15 +9,27 @@ type AppState = {
   envelopes: Envelope[];
   transactions: Transaction[];
   savings_challenges: SavingsChallenge[];
+  achievements: Achievement[];
+  user_achievements: UserAchievement[];
+  rewards: Reward[];
+  notifications: AppNotification[];
   updateSettings: (p: Partial<Settings>) => Promise<void>;
   setPro: (value: boolean) => Promise<void>;
   addTransaction: (t: Transaction) => void;
   addEnvelope: (e: Envelope) => void;
   addAccount: (a: Account) => void;
   toggleChallengeKey: (id: string, key: string) => void;
+  loadAchievements: () => Promise<void>;
+  loadUserAchievements: () => Promise<void>;
+  loadRewards: () => Promise<void>;
+  loadNotifications: () => Promise<void>;
+  updateAchievementProgress: (achievementKey: string, progress: number) => Promise<void>;
+  claimReward: (rewardId: string) => Promise<void>;
+  checkAndUpdateStreak: () => Promise<void>;
+  initializeGamification: () => Promise<void>;
 };
 
-function initialState(theme: Settings['theme']): Omit<AppState, 'addTransaction' | 'addEnvelope' | 'addAccount' | 'toggleChallengeKey'> {
+function initialState(theme: Settings['theme']): Omit<AppState, 'addTransaction' | 'addEnvelope' | 'addAccount' | 'toggleChallengeKey' | 'loadAchievements' | 'loadUserAchievements' | 'loadRewards' | 'loadNotifications' | 'updateAchievementProgress' | 'claimReward' | 'checkAndUpdateStreak' | 'initializeGamification'> {
   const now = new Date();
   const iso = (d: Date) => d.toISOString();
   return {
@@ -28,11 +40,19 @@ function initialState(theme: Settings['theme']): Omit<AppState, 'addTransaction'
       passcode_enabled: false,
       theme,
       language: 'en',
+      last_app_open: iso(now),
+      streak_days: 0,
+      total_score: 0,
+      notifications_enabled: true,
     },
     accounts: [],
     envelopes: [],
     transactions: [],
     savings_challenges: [],
+    achievements: [],
+    user_achievements: [],
+    rewards: [],
+    notifications: [],
   };
 }
 
@@ -156,5 +176,70 @@ export const useAppStore = create<AppState>((set, get) => ({
         });
       });
     } catch {}
+  },
+
+  // Gamification methods
+  initializeGamification: async () => {
+    await gamificationService.initializeAchievements();
+    await get().loadAchievements();
+    await get().loadUserAchievements();
+    await get().loadRewards();
+  },
+
+  loadAchievements: async () => {
+    const achievements = await gamificationService.getAchievements();
+    set({ achievements });
+  },
+
+  loadUserAchievements: async () => {
+    const userAchievements = await gamificationService.getUserAchievements();
+    set({ user_achievements: userAchievements });
+  },
+
+  loadRewards: async () => {
+    const rewards = await gamificationService.getAvailableRewards();
+    set({ rewards });
+  },
+
+  loadNotifications: async () => {
+    const notifications = await notificationService.getPendingNotifications();
+    set({ notifications });
+  },
+
+  updateAchievementProgress: async (achievementKey, progress) => {
+    await gamificationService.updateProgress(achievementKey, progress);
+    await get().loadUserAchievements();
+    await get().loadNotifications();
+  },
+
+  claimReward: async (rewardId) => {
+    set(state => ({
+      rewards: state.rewards.map(r =>
+        r.id === rewardId ? { ...r, claimed: true } : r
+      )
+    }));
+
+    // Update total score in settings
+    const reward = get().rewards.find(r => r.id === rewardId);
+    if (reward) {
+      const newTotalScore = (get().settings.total_score || 0) + reward.value;
+      await get().updateSettings({ total_score: newTotalScore });
+    }
+  },
+
+  checkAndUpdateStreak: async () => {
+    await gamificationService.checkAndUpdateStreak();
+    // Reload settings to get updated streak
+    const db = getDatabase();
+    const settingsData = await db.get('settings').query().fetch();
+    if (settingsData[0]) {
+      const updatedSettings = {
+        ...get().settings,
+        last_app_open: new Date(settingsData[0].last_app_open).toISOString(),
+        streak_days: settingsData[0].streak_days,
+        total_score: settingsData[0].total_score,
+      };
+      set({ settings: updatedSettings });
+    }
   },
 }));

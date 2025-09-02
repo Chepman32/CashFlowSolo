@@ -1,7 +1,6 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { StatusBar, StyleSheet, View, ActivityIndicator, Text } from 'react-native';
 import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
-import { colors } from './src/theme/colors';
 import AppTabs from './src/navigation/AppTabs';
 import { hydrateFromDB, seedIfEmpty } from './src/store/persistence';
 import { useAppStore } from './src/store/useAppStore';
@@ -16,6 +15,8 @@ function InnerApp() {
   const setHydrated = useAppStore.setState;
   const accounts = useAppStore(s => s.accounts);
   const envelopes = useAppStore(s => s.envelopes);
+  const initializeGamification = useAppStore(s => s.initializeGamification);
+  const checkAndUpdateStreak = useAppStore(s => s.checkAndUpdateStreak);
 
   useEffect(() => {
     (async () => {
@@ -34,6 +35,15 @@ function InnerApp() {
             try { i18n.changeLanguage((data.settings as any).language); } catch {}
           }
         }
+
+        // Initialize gamification system
+        try {
+          await initializeGamification();
+          await checkAndUpdateStreak();
+        } catch (gamificationError) {
+          console.error('Error initializing gamification:', gamificationError);
+        }
+
       } catch (e) {
         // noop: falls back to in-memory defaults
       } finally {

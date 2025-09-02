@@ -10,8 +10,8 @@ const resources = {
     addTx: { title: 'Add Transaction', amount: 'Amount', note: 'Note', attachments: 'Attachments', currency: 'Currency', selectCurrency: 'Select Currency', addAttachment: 'Add Attachment', chooseSource: 'Choose a source' },
     currency: { selectBase: 'Select Base Currency', usd: 'US Dollar', eur: 'Euro', gbp: 'British Pound' },
     onboarding: { welcome: 'Welcome', welcomeBody: 'Your private, offline budget.', envelopeMethod: 'Envelope Method', envelopeMethodBody: 'Assign money to digital envelopes and stay on track.', baseCurrency: 'Base Currency', baseCurrencyBody: 'Choose your default currency.', getStarted: 'Get Started', getStartedBody: "We'll set up your first account and envelope.", createBudget: 'Create My Budget', next: 'Next', defaultAccountName: 'Cash', defaultEnvelopeName: 'Groceries' },
-    tabs: { dashboard: 'Dashboard', envelopes: 'Envelopes', transactions: 'Transactions', challenges: 'Challenges', settings: 'Settings' },
-    screens: { dashboard: 'Dashboard', envelopes: 'Envelopes', transactions: 'Transactions', challenges: 'Challenges', settings: 'Settings' },
+    tabs: { dashboard: 'Dashboard', envelopes: 'Envelopes', transactions: 'Transactions', achievements: 'Achievements', settings: 'Settings' },
+    screens: { dashboard: 'Dashboard', envelopes: 'Envelopes', transactions: 'Transactions', achievements: 'Achievements', settings: 'Settings' },
     attachments: { add: 'Add', mediaLibrary: 'Media Library', files: 'Files', attachment: 'Attachment', unableToAttachFile: 'Unable to attach file', attachmentPickerNotInstalled: 'Attachment Picker Not Installed', attachmentPickerNotInstalledBody: 'Run "yarn add react-native-document-picker" and then "npx pod-install" (iOS) to enable file attachments.', photosAccess: 'Photos Access', image: 'Image' },
     envelope: { budgetedLabel: 'Budgeted:', spentLabel: 'Spent', spendLabel: 'Spend:', shoppingTrip: 'Shopping trip' },
     transaction: { income: 'Income', expense: 'Expense', transfer: 'Transfer' },
@@ -40,6 +40,35 @@ const resources = {
     },
     languages: { english: 'English', russian: 'Русский', spanish: 'Español', french: 'Français', german: 'Deutsch', chinese: '中文', japanese: '日本語' },
     symbols: { checkmark: '✓', close: '×', dropdown: '▼' },
+    achievements: {
+      title: 'Achievements',
+      points: 'Points',
+      streakDays: 'Streak Days',
+      progress: 'Progress',
+      categories: {
+        all: 'All',
+        streak: 'Streaks',
+        transactions: 'Transactions',
+        challenges: 'Challenges',
+        budgeting: 'Budget',
+        special: 'Special'
+      },
+      availableRewards: 'Available Rewards',
+      achievementNames: {
+        firstTransaction: 'First Step',
+        budgetMaster: 'Budget Master',
+        streakWarrior: 'Streak Warrior',
+        challengeChampion: 'Challenge Champion',
+        wealthBuilder: 'Wealth Builder'
+      },
+      achievementDescriptions: {
+        firstTransaction: 'Create your first transaction',
+        budgetMaster: 'Create 5 envelopes',
+        streakWarrior: 'Maintain a 7-day login streak',
+        challengeChampion: 'Complete 3 savings challenges',
+        wealthBuilder: 'Save 1000 currency units'
+      }
+    },
   }},
   ru: { translation: {
     common: { cancel: 'Отмена', back: 'Назад', save: 'Сохранить', add: 'Добавить', totalBalance: 'Общий баланс', budgetUsage: 'Использование бюджета', recentTransactions: 'Последние транзакции', noTransactions: 'Пока нет транзакций', openPoster: 'Открыть постер', budgeted: 'Запланировано', spent: 'Потрачено', remaining: 'Осталось', category: 'Категория', optional: 'необязательно' },
@@ -49,8 +78,8 @@ const resources = {
     addTx: { title: 'Добавить транзакцию', amount: 'Сумма', note: 'Заметка', attachments: 'Вложения', currency: 'Валюта', selectCurrency: 'Выбрать валюту', addAttachment: 'Добавить вложение', chooseSource: 'Выбрать источник' },
     currency: { selectBase: 'Выбрать базовую валюту', usd: 'Доллар США', eur: 'Евро', gbp: 'Британский фунт' },
     onboarding: { welcome: 'Добро пожаловать', welcomeBody: 'Ваш личный, офлайн бюджет.', envelopeMethod: 'Метод конвертов', envelopeMethodBody: 'Распределяйте деньги по цифровым конвертам и следите за расходами.', baseCurrency: 'Базовая валюта', baseCurrencyBody: 'Выберите валюту по умолчанию.', getStarted: 'Начать', getStartedBody: 'Мы настроим ваш первый счет и конверт.', createBudget: 'Создать мой бюджет', next: 'Далее', defaultAccountName: 'Наличные', defaultEnvelopeName: 'Продукты' },
-    tabs: { dashboard: 'Панель', envelopes: 'Конверты', transactions: 'Транзакции', challenges: 'Вызовы', settings: 'Настройки' },
-    screens: { dashboard: 'Панель', envelopes: 'Конверты', transactions: 'Транзакции', challenges: 'Вызовы', settings: 'Настройки' },
+    tabs: { dashboard: 'Панель', envelopes: 'Конверты', transactions: 'Транзакции', achievements: 'Достижения', settings: 'Настройки' },
+    screens: { dashboard: 'Панель', envelopes: 'Конверты', transactions: 'Транзакции', achievements: 'Достижения', settings: 'Настройки' },
     attachments: { add: 'Добавить', mediaLibrary: 'Медиатека', files: 'Файлы', attachment: 'Вложение', unableToAttachFile: 'Не удалось прикрепить файл', attachmentPickerNotInstalled: 'Средство выбора вложений не установлено', attachmentPickerNotInstalledBody: 'Запустите "yarn add react-native-document-picker", а затем "npx pod-install" (iOS) для включения вложений.', photosAccess: 'Доступ к фото', image: 'Изображение' },
     envelope: { budgetedLabel: 'Запланировано:', spentLabel: 'Потрачено', spendLabel: 'Расход:', shoppingTrip: 'Поход по магазинам' },
     transaction: { income: 'Доход', expense: 'Расход', transfer: 'Перевод' },
@@ -79,6 +108,35 @@ const resources = {
     },
     languages: { english: 'English', russian: 'Русский', spanish: 'Español', french: 'Français', german: 'Deutsch', chinese: '中文', japanese: '日本語' },
     symbols: { checkmark: '✓', close: '×', dropdown: '▼' },
+    achievements: {
+      title: 'Достижения',
+      points: 'Очков',
+      streakDays: 'Дней серии',
+      progress: 'Прогресс',
+      categories: {
+        all: 'Все',
+        streak: 'Серии',
+        transactions: 'Транзакции',
+        challenges: 'Вызовы',
+        budgeting: 'Бюджет',
+        special: 'Особые'
+      },
+      availableRewards: 'Доступные награды',
+      achievementNames: {
+        firstTransaction: 'Первый шаг',
+        budgetMaster: 'Мастер бюджета',
+        streakWarrior: 'Воин серии',
+        challengeChampion: 'Чемпион вызовов',
+        wealthBuilder: 'Строитель богатства'
+      },
+      achievementDescriptions: {
+        firstTransaction: 'Создайте первую транзакцию',
+        budgetMaster: 'Создайте 5 конвертов',
+        streakWarrior: 'Поддерживайте серию входов 7 дней подряд',
+        challengeChampion: 'Завершите 3 сберегательных вызова',
+        wealthBuilder: 'Накопите 1000 единиц валюты'
+      }
+    },
   }},
   es: { translation: {
     common: { cancel: 'Cancelar', back: 'Atrás', save: 'Guardar', add: 'Añadir', totalBalance: 'Balance Total', budgetUsage: 'Uso del presupuesto', recentTransactions: 'Transacciones Recientes', noTransactions: 'Aún no hay transacciones', openPoster: 'Abrir Póster', budgeted: 'Presupuestado', spent: 'Gastado', remaining: 'Restante', category: 'Categoría', optional: 'opcional' },
@@ -88,8 +146,8 @@ const resources = {
     addTx: { title: 'Añadir transacción', amount: 'Cantidad', note: 'Nota', attachments: 'Adjuntos', currency: 'Moneda', selectCurrency: 'Seleccionar moneda', addAttachment: 'Añadir adjunto', chooseSource: 'Elegir fuente' },
     currency: { selectBase: 'Seleccionar moneda base', usd: 'Dólar estadounidense', eur: 'Euro', gbp: 'Libra esterlina' },
     onboarding: { welcome: 'Bienvenido', welcomeBody: 'Tu presupuesto privado y offline.', envelopeMethod: 'Método de Sobres', envelopeMethodBody: 'Asigna dinero a sobres digitales y mantén el control.', baseCurrency: 'Moneda Base', baseCurrencyBody: 'Elige tu moneda predeterminada.', getStarted: 'Comenzar', getStartedBody: 'Configuraremos tu primera cuenta y sobre.', createBudget: 'Crear Mi Presupuesto', next: 'Siguiente', defaultAccountName: 'Efectivo', defaultEnvelopeName: 'Comestibles' },
-    tabs: { dashboard: 'Panel', envelopes: 'Sobres', transactions: 'Transacciones', challenges: 'Desafíos', settings: 'Ajustes' },
-    screens: { dashboard: 'Panel', envelopes: 'Sobres', transactions: 'Transacciones', challenges: 'Desafíos', settings: 'Ajustes' },
+    tabs: { dashboard: 'Panel', envelopes: 'Sobres', transactions: 'Transacciones', achievements: 'Logros', settings: 'Ajustes' },
+    screens: { dashboard: 'Panel', envelopes: 'Sobres', transactions: 'Transacciones', achievements: 'Logros', settings: 'Ajustes' },
     attachments: { add: 'Añadir', mediaLibrary: 'Fotos', files: 'Archivos', attachment: 'Adjunto', unableToAttachFile: 'No se pudo adjuntar el archivo', attachmentPickerNotInstalled: 'Selector de adjuntos no instalado', attachmentPickerNotInstalledBody: 'Ejecuta "yarn add react-native-document-picker" y luego "npx pod-install" (iOS) para habilitar adjuntos.', photosAccess: 'Acceso a fotos', image: 'Imagen' },
     envelope: { budgetedLabel: 'Presupuestado:', spentLabel: 'Gastado', spendLabel: 'Gastar:', shoppingTrip: 'Viaje de compras' },
     transaction: { income: 'Ingreso', expense: 'Gasto', transfer: 'Transferencia' },
@@ -118,6 +176,35 @@ const resources = {
     },
     languages: { english: 'English', russian: 'Русский', spanish: 'Español', french: 'Français', german: 'Deutsch', chinese: '中文', japanese: '日本語' },
     symbols: { checkmark: '✓', close: '×', dropdown: '▼' },
+    achievements: {
+      title: 'Logros',
+      points: 'Puntos',
+      streakDays: 'Días de Racha',
+      progress: 'Progreso',
+      categories: {
+        all: 'Todos',
+        streak: 'Rachas',
+        transactions: 'Transacciones',
+        challenges: 'Desafíos',
+        budgeting: 'Presupuesto',
+        special: 'Especiales'
+      },
+      availableRewards: 'Recompensas Disponibles',
+      achievementNames: {
+        firstTransaction: 'Primer Paso',
+        budgetMaster: 'Maestro del Presupuesto',
+        streakWarrior: 'Guerrero de Racha',
+        challengeChampion: 'Campeón de Desafíos',
+        wealthBuilder: 'Constructor de Riqueza'
+      },
+      achievementDescriptions: {
+        firstTransaction: 'Crea tu primera transacción',
+        budgetMaster: 'Crea 5 sobres',
+        streakWarrior: 'Mantén una racha de 7 días de entrada',
+        challengeChampion: 'Completa 3 desafíos de ahorro',
+        wealthBuilder: 'Ahorra 1000 unidades de moneda'
+      }
+    },
   }},
   fr: { translation: {
     common: { cancel: 'Annuler', back: 'Retour', save: 'Enregistrer', add: 'Ajouter', totalBalance: 'Solde Total', budgetUsage: 'Utilisation du budget', recentTransactions: 'Transactions Récentes', noTransactions: 'Aucune transaction pour le moment', openPoster: 'Ouvrir l\'Affiche', budgeted: 'Budgétisé', spent: 'Dépensé', remaining: 'Restant', category: 'Catégorie', optional: 'optionnel' },
@@ -127,8 +214,8 @@ const resources = {
     addTx: { title: 'Ajouter une transaction', amount: 'Montant', note: 'Note', attachments: 'Pièces jointes', currency: 'Devise', selectCurrency: 'Sélectionner la devise', addAttachment: 'Ajouter une pièce jointe', chooseSource: 'Choisir la source' },
     currency: { selectBase: 'Sélectionner la devise de base', usd: 'Dollar américain', eur: 'Euro', gbp: 'Livre sterling' },
     onboarding: { welcome: 'Bienvenue', welcomeBody: 'Votre budget privé et hors ligne.', envelopeMethod: 'Méthode des Enveloppes', envelopeMethodBody: 'Assignez de l\'argent à des enveloppes numériques et restez sur la bonne voie.', baseCurrency: 'Devise de Base', baseCurrencyBody: 'Choisissez votre devise par défaut.', getStarted: 'Commencer', getStartedBody: 'Nous configurerons votre premier compte et enveloppe.', createBudget: 'Créer Mon Budget', next: 'Suivant', defaultAccountName: 'Espèces', defaultEnvelopeName: 'Épicerie' },
-    tabs: { dashboard: 'Tableau de bord', envelopes: 'Enveloppes', transactions: 'Transactions', challenges: 'Défis', settings: 'Paramètres' },
-    screens: { dashboard: 'Tableau de bord', envelopes: 'Enveloppes', transactions: 'Transactions', challenges: 'Défis', settings: 'Paramètres' },
+    tabs: { dashboard: 'Tableau de bord', envelopes: 'Enveloppes', transactions: 'Transactions', achievements: 'Succès', settings: 'Paramètres' },
+    screens: { dashboard: 'Tableau de bord', envelopes: 'Enveloppes', transactions: 'Transactions', achievements: 'Succès', settings: 'Paramètres' },
     attachments: { add: 'Ajouter', mediaLibrary: 'Photos', files: 'Fichiers', attachment: 'Pièce jointe', unableToAttachFile: 'Impossible de joindre le fichier', attachmentPickerNotInstalled: 'Sélecteur de pièces jointes non installé', attachmentPickerNotInstalledBody: 'Exécutez "yarn add react-native-document-picker" puis "npx pod-install" (iOS) pour activer les pièces jointes.', photosAccess: 'Accès aux photos', image: 'Image' },
     envelope: { budgetedLabel: 'Budgétisé:', spentLabel: 'Dépensé', spendLabel: 'Dépenser:', shoppingTrip: 'Virée shopping' },
     transaction: { income: 'Revenus', expense: 'Dépense', transfer: 'Transfert' },
@@ -157,6 +244,35 @@ const resources = {
     },
     languages: { english: 'English', russian: 'Русский', spanish: 'Español', french: 'Français', german: 'Deutsch', chinese: '中文', japanese: '日本語' },
     symbols: { checkmark: '✓', close: '×', dropdown: '▼' },
+    achievements: {
+      title: 'Succès',
+      points: 'Points',
+      streakDays: 'Jours de Série',
+      progress: 'Progrès',
+      categories: {
+        all: 'Tous',
+        streak: 'Séries',
+        transactions: 'Transactions',
+        challenges: 'Défis',
+        budgeting: 'Budget',
+        special: 'Spéciaux'
+      },
+      availableRewards: 'Récompenses Disponibles',
+      achievementNames: {
+        firstTransaction: 'Premier Pas',
+        budgetMaster: 'Maître du Budget',
+        streakWarrior: 'Guerrier de Série',
+        challengeChampion: 'Champion des Défis',
+        wealthBuilder: 'Bâtisseur de Richesse'
+      },
+      achievementDescriptions: {
+        firstTransaction: 'Créez votre première transaction',
+        budgetMaster: 'Créez 5 enveloppes',
+        streakWarrior: 'Maintenez une série de 7 jours de connexion',
+        challengeChampion: 'Terminez 3 défis d\'épargne',
+        wealthBuilder: 'Épargnez 1000 unités de devise'
+      }
+    },
   }},
   de: { translation: {
     common: { cancel: 'Abbrechen', back: 'Zurück', save: 'Speichern', add: 'Hinzufügen', totalBalance: 'Gesamtsaldo', budgetUsage: 'Budgetnutzung', recentTransactions: 'Letzte Transaktionen', noTransactions: 'Noch keine Transaktionen', openPoster: 'Poster öffnen', budgeted: 'Eingeplant', spent: 'Ausgegeben', remaining: 'Verbleibend', category: 'Kategorie', optional: 'optional' },
@@ -166,8 +282,8 @@ const resources = {
     addTx: { title: 'Transaktion hinzufügen', amount: 'Betrag', note: 'Notiz', attachments: 'Anhänge', currency: 'Währung', selectCurrency: 'Währung auswählen', addAttachment: 'Anhang hinzufügen', chooseSource: 'Quelle wählen' },
     currency: { selectBase: 'Basiswährung auswählen', usd: 'US-Dollar', eur: 'Euro', gbp: 'Britisches Pfund' },
     onboarding: { welcome: 'Willkommen', welcomeBody: 'Ihr privater, offline Budget.', envelopeMethod: 'Umschlag-Methode', envelopeMethodBody: 'Weisen Sie Geld digitalen Umschlägen zu und bleiben Sie auf dem richtigen Weg.', baseCurrency: 'Basiswährung', baseCurrencyBody: 'Wählen Sie Ihre Standardwährung.', getStarted: 'Loslegen', getStartedBody: 'Wir richten Ihr erstes Konto und Ihren ersten Umschlag ein.', createBudget: 'Mein Budget erstellen', next: 'Weiter', defaultAccountName: 'Bargeld', defaultEnvelopeName: 'Lebensmittel' },
-    tabs: { dashboard: 'Dashboard', envelopes: 'Umschläge', transactions: 'Transaktionen', challenges: 'Herausforderungen', settings: 'Einstellungen' },
-    screens: { dashboard: 'Dashboard', envelopes: 'Umschläge', transactions: 'Transaktionen', challenges: 'Herausforderungen', settings: 'Einstellungen' },
+    tabs: { dashboard: 'Dashboard', envelopes: 'Umschläge', transactions: 'Transaktionen', achievements: 'Erfolge', settings: 'Einstellungen' },
+    screens: { dashboard: 'Dashboard', envelopes: 'Umschläge', transactions: 'Transaktionen', achievements: 'Erfolge', settings: 'Einstellungen' },
     attachments: { add: 'Hinzufügen', mediaLibrary: 'Fotos', files: 'Dateien', attachment: 'Anhang', unableToAttachFile: 'Datei konnte nicht angehängt werden', attachmentPickerNotInstalled: 'Anhangsauswahl nicht installiert', attachmentPickerNotInstalledBody: 'Führen Sie "yarn add react-native-document-picker" aus und dann "npx pod-install" (iOS), um Anhänge zu aktivieren.', photosAccess: 'Zugriff auf Fotos', image: 'Bild' },
     envelope: { budgetedLabel: 'Eingeplant:', spentLabel: 'Ausgegeben', spendLabel: 'Ausgeben:', shoppingTrip: 'Einkaufstrip' },
     transaction: { income: 'Einkommen', expense: 'Ausgabe', transfer: 'Übertragung' },
@@ -196,6 +312,35 @@ const resources = {
     },
     languages: { english: 'English', russian: 'Русский', spanish: 'Español', french: 'Français', german: 'Deutsch', chinese: '中文', japanese: '日本語' },
     symbols: { checkmark: '✓', close: '×', dropdown: '▼' },
+    achievements: {
+      title: 'Erfolge',
+      points: 'Punkte',
+      streakDays: 'Serientage',
+      progress: 'Fortschritt',
+      categories: {
+        all: 'Alle',
+        streak: 'Serien',
+        transactions: 'Transaktionen',
+        challenges: 'Herausforderungen',
+        budgeting: 'Budget',
+        special: 'Besondere'
+      },
+      availableRewards: 'Verfügbare Belohnungen',
+      achievementNames: {
+        firstTransaction: 'Erster Schritt',
+        budgetMaster: 'Budget-Meister',
+        streakWarrior: 'Serien-Krieger',
+        challengeChampion: 'Herausforderungs-Champion',
+        wealthBuilder: 'Reichtums-Bauer'
+      },
+      achievementDescriptions: {
+        firstTransaction: 'Erstellen Sie Ihre erste Transaktion',
+        budgetMaster: 'Erstellen Sie 5 Umschläge',
+        streakWarrior: 'Halten Sie eine 7-tägige Anmeldeserie aufrecht',
+        challengeChampion: 'Vervollständigen Sie 3 Spar-Herausforderungen',
+        wealthBuilder: 'Sparen Sie 1000 Währungseinheiten'
+      }
+    },
   }},
   zh: { translation: {
     common: { cancel: '取消', back: '返回', save: '保存', add: '添加', totalBalance: '总余额', budgetUsage: '预算使用', recentTransactions: '最近交易', noTransactions: '暂无交易', openPoster: '打开海报', budgeted: '已预算', spent: '已花费', remaining: '剩余', category: '类别', optional: '可选' },
@@ -205,8 +350,8 @@ const resources = {
     addTx: { title: '添加交易', amount: '金额', note: '备注', attachments: '附件', currency: '货币', selectCurrency: '选择货币', addAttachment: '添加附件', chooseSource: '选择来源' },
     currency: { selectBase: '选择基础货币', usd: '美元', eur: '欧元', gbp: '英镑' },
     onboarding: { welcome: '欢迎', welcomeBody: '您的私人离线预算。', envelopeMethod: '信封法', envelopeMethodBody: '将资金分配到数字信封中并保持正轨。', baseCurrency: '基础货币', baseCurrencyBody: '选择您的默认货币。', getStarted: '开始使用', getStartedBody: '我们将设置您的第一个账户和信封。', createBudget: '创建我的预算', next: '下一步', defaultAccountName: '现金', defaultEnvelopeName: '杂货' },
-    tabs: { dashboard: '仪表板', envelopes: '信封', transactions: '交易', challenges: '挑战', settings: '设置' },
-    screens: { dashboard: '仪表板', envelopes: '信封', transactions: '交易', challenges: '挑战', settings: '设置' },
+    tabs: { dashboard: '仪表板', envelopes: '信封', transactions: '交易', achievements: '成就', settings: '设置' },
+    screens: { dashboard: '仪表板', envelopes: '信封', transactions: '交易', achievements: '成就', settings: '设置' },
     attachments: { add: '添加', mediaLibrary: '照片', files: '文件', attachment: '附件', unableToAttachFile: '无法附加文件', attachmentPickerNotInstalled: '附件选择器未安装', attachmentPickerNotInstalledBody: '运行 "yarn add react-native-document-picker" 然后 "npx pod-install" (iOS) 以启用附件。', photosAccess: '照片访问权限', image: '图片' },
     envelope: { budgetedLabel: '已预算:', spentLabel: '已花费', spendLabel: '花费:', shoppingTrip: '购物之旅' },
     transaction: { income: '收入', expense: '支出', transfer: '转账' },
@@ -235,6 +380,35 @@ const resources = {
     },
     languages: { english: 'English', russian: 'Русский', spanish: 'Español', french: 'Français', german: 'Deutsch', chinese: '中文', japanese: '日本語' },
     symbols: { checkmark: '✓', close: '×', dropdown: '▼' },
+    achievements: {
+      title: '成就',
+      points: '积分',
+      streakDays: '连续天数',
+      progress: '进度',
+      categories: {
+        all: '全部',
+        streak: '连续',
+        transactions: '交易',
+        challenges: '挑战',
+        budgeting: '预算',
+        special: '特殊'
+      },
+      availableRewards: '可用奖励',
+      achievementNames: {
+        firstTransaction: '第一步',
+        budgetMaster: '预算大师',
+        streakWarrior: '连续战士',
+        challengeChampion: '挑战冠军',
+        wealthBuilder: '财富建造者'
+      },
+      achievementDescriptions: {
+        firstTransaction: '创建您的第一笔交易',
+        budgetMaster: '创建5个信封',
+        streakWarrior: '保持7天登录连续记录',
+        challengeChampion: '完成3个储蓄挑战',
+        wealthBuilder: '储蓄1000个货币单位'
+      }
+    },
   }},
   ja: { translation: {
     common: { cancel: 'キャンセル', back: '戻る', save: '保存', add: '追加', totalBalance: '総残高', budgetUsage: '予算使用', recentTransactions: '最近の取引', noTransactions: 'まだ取引がありません', openPoster: 'ポスターを開く', budgeted: '予算済み', spent: '支出済み', remaining: '残り', category: 'カテゴリ', optional: '任意' },
@@ -244,8 +418,8 @@ const resources = {
     addTx: { title: '取引を追加', amount: '金額', note: 'メモ', attachments: '添付', currency: '通貨', selectCurrency: '通貨を選択', addAttachment: '添付ファイルを追加', chooseSource: 'ソースを選択' },
     currency: { selectBase: '基本通貨を選択', usd: '米ドル', eur: 'ユーロ', gbp: '英ポンド' },
     onboarding: { welcome: 'ようこそ', welcomeBody: 'あなたのプライベートでオフラインの予算。', envelopeMethod: 'エンベロープ法', envelopeMethodBody: 'デジタルエンベロープにお金を割り当て、軌道に乗り続けましょう。', baseCurrency: '基本通貨', baseCurrencyBody: 'デフォルト通貨を選択してください。', getStarted: '始めましょう', getStartedBody: '最初のアカウントとエンベロープを設定します。', createBudget: '私の予算を作成', next: '次へ', defaultAccountName: '現金', defaultEnvelopeName: '食料品' },
-    tabs: { dashboard: 'ダッシュボード', envelopes: 'エンベロープ', transactions: '取引', challenges: 'チャレンジ', settings: '設定' },
-    screens: { dashboard: 'ダッシュボード', envelopes: 'エンベロープ', transactions: '取引', challenges: 'チャレンジ', settings: '設定' },
+    tabs: { dashboard: 'ダッシュボード', envelopes: 'エンベロープ', transactions: '取引', achievements: '実績', settings: '設定' },
+    screens: { dashboard: 'ダッシュボード', envelopes: 'エンベロープ', transactions: '取引', achievements: '実績', settings: '設定' },
     attachments: { add: '追加', mediaLibrary: '写真', files: 'ファイル', attachment: '添付', unableToAttachFile: 'ファイルを添付できません', attachmentPickerNotInstalled: '添付ファイルピッカーがインストールされていません', attachmentPickerNotInstalledBody: '"yarn add react-native-document-picker" を実行してから "npx pod-install" (iOS) を実行して添付を有効にします。', photosAccess: '写真へのアクセス', image: '画像' },
     envelope: { budgetedLabel: '予算済み:', spentLabel: '支出済み', spendLabel: '支出:', shoppingTrip: 'ショッピング旅行' },
     transaction: { income: '収入', expense: '支出', transfer: '送金' },
@@ -274,6 +448,35 @@ const resources = {
     },
     languages: { english: 'English', russian: 'Русский', spanish: 'Español', french: 'Français', german: 'Deutsch', chinese: '中文', japanese: '日本語' },
     symbols: { checkmark: '✓', close: '×', dropdown: '▼' },
+    achievements: {
+      title: '実績',
+      points: 'ポイント',
+      streakDays: '連続日数',
+      progress: '進捗',
+      categories: {
+        all: 'すべて',
+        streak: '連続',
+        transactions: '取引',
+        challenges: 'チャレンジ',
+        budgeting: '予算',
+        special: '特別'
+      },
+      availableRewards: '利用可能な報酬',
+      achievementNames: {
+        firstTransaction: '最初の一歩',
+        budgetMaster: '予算マスター',
+        streakWarrior: '連続戦士',
+        challengeChampion: 'チャレンジチャンピオン',
+        wealthBuilder: '富の建設者'
+      },
+      achievementDescriptions: {
+        firstTransaction: '最初の取引を作成',
+        budgetMaster: '5つのエンベロープを作成',
+        streakWarrior: '7日間のログイン連続記録を維持',
+        challengeChampion: '3つの貯蓄チャレンジを完了',
+        wealthBuilder: '1000通貨単位を貯蓄'
+      }
+    },
   }},
 };
 
