@@ -13,6 +13,7 @@ import type { Envelope } from '../types';
 import { useAppTheme } from '../theme/ThemeProvider';
 import { useTranslation } from 'react-i18next';
 import currencyService, { CURRENCIES, type CurrencyCode } from '../services/currencyService';
+import { getTranslatedEnvelopeName } from '../utils/translationHelpers';
 
 export default function AddTransactionModal({ visible, onClose }: { visible: boolean; onClose: () => void }) {
   const { colors: theme } = useAppTheme();
@@ -101,8 +102,8 @@ export default function AddTransactionModal({ visible, onClose }: { visible: boo
           idx => {
             // Present picker after the ActionSheet finishes dismissing.
             const run = async () => {
-              if (idx === 1) resolve(await pickFromMediaLibrary());
-              else if (idx === 2) resolve(await pickFiles());
+              if (idx === 1) resolve(await pickFromMediaLibrary(t));
+              else if (idx === 2) resolve(await pickFiles(false, t));
               else resolve([]);
             };
             setTimeout(run, 220);
@@ -113,12 +114,12 @@ export default function AddTransactionModal({ visible, onClose }: { visible: boo
     // Android (and others): simple alert chooser
     return new Promise(resolve => {
       Alert.alert(
-        'Add Attachment',
-        'Choose a source',
+        t('addTx.addAttachment'),
+        t('addTx.chooseSource'),
         [
-          { text: 'Media Library', onPress: async () => resolve(await pickFromMediaLibrary()) },
-          { text: 'Files', onPress: async () => resolve(await pickFiles()) },
-          { text: 'Cancel', style: 'cancel', onPress: () => resolve([]) },
+          { text: t('attachments.mediaLibrary'), onPress: async () => resolve(await pickFromMediaLibrary(t)) },
+          { text: t('attachments.files'), onPress: async () => resolve(await pickFiles(false, t)) },
+          { text: t('common.cancel'), style: 'cancel', onPress: () => resolve([]) },
         ],
         { cancelable: true },
       );
@@ -169,7 +170,7 @@ export default function AddTransactionModal({ visible, onClose }: { visible: boo
         ) : (
           <View style={[styles.card, { backgroundColor: theme.surface }]}> 
             {selectedEnvelope && (
-              <Text style={{ color: theme.textSecondary, marginBottom: 6 }}>{`Category: ${envelopes.find(e => e.id === selectedEnvelope)?.name}`}</Text>
+              <Text style={{ color: theme.textSecondary, marginBottom: 6 }}>{`${t('common.category')}: ${envelopes.find(e => e.id === selectedEnvelope)?.name}`}</Text>
             )}
             <Text style={{ color: theme.textSecondary }}>{t('addTx.amount')}</Text>
             <View style={styles.amountRow}>
@@ -195,7 +196,7 @@ export default function AddTransactionModal({ visible, onClose }: { visible: boo
             <TextInput
               value={note}
               onChangeText={setNote}
-              placeholder={t('addTx.note') + ' (optional)'}
+              placeholder={`${t('addTx.note')} (${t('common.optional')})`}
               placeholderTextColor={theme.textSecondary}
               style={[styles.input, { color: theme.textPrimary }]}
             />
@@ -234,9 +235,9 @@ export default function AddTransactionModal({ visible, onClose }: { visible: boo
         <View style={styles.currencyModalOverlay}>
           <View style={[styles.currencyModalContent, { backgroundColor: theme.surface }]}>
             <View style={styles.currencyModalHeader}>
-              <Text style={[styles.currencyModalTitle, { color: theme.textPrimary }]}>Select Currency</Text>
+              <Text style={[styles.currencyModalTitle, { color: theme.textPrimary }]}>{t('addTx.selectCurrency')}</Text>
               <Pressable onPress={() => setShowCurrencyPicker(false)} style={styles.currencyModalClose}>
-                <Text style={{ color: theme.textSecondary, fontSize: 24 }}>×</Text>
+                <Text style={{ color: theme.textSecondary, fontSize: 24 }}>{t('symbols.close')}</Text>
               </Pressable>
             </View>
             
@@ -274,7 +275,7 @@ export default function AddTransactionModal({ visible, onClose }: { visible: boo
                     </View>
                   </View>
                   {selectedCurrency === currency.code && (
-                    <Text style={{ color: 'white', fontSize: 20 }}>✓</Text>
+                    <Text style={{ color: 'white', fontSize: 20 }}>{t('symbols.checkmark')}</Text>
                   )}
                 </Pressable>
               ))}
@@ -371,30 +372,30 @@ function CategoryTile({ label, icon, color, onPress }: { label: string; icon: st
   );
 }
 
-const SUGGESTED_CATEGORIES: Array<{ name: string; icon: string; color: string }> = [
-  { name: 'Groceries', icon: '🛒', color: '#EF4444' },
-  { name: 'Rent/Utilities', icon: '🏠', color: '#60A5FA' },
-  { name: 'Restaurants', icon: '🍽️', color: '#F97316' },
-  { name: 'Travel', icon: '✈️', color: '#22C55E' },
-  { name: 'Transport', icon: '🚗', color: '#22C55E' },
-  { name: 'Education', icon: '📚', color: '#A855F7' },
-  { name: 'Gifts', icon: '🎁', color: '#3B82F6' },
-  { name: 'Health', icon: '🩺', color: '#EF4444' },
-  { name: 'Entertainment', icon: '🎬', color: '#F59E0B' },
-  { name: 'Shopping', icon: '🛍️', color: '#06B6D4' },
-  { name: 'Subscriptions', icon: '💳', color: '#8B5CF6' },
+const getSuggestedCategories = (t: (key: string) => string) => [
+  { name: t('categories.groceries'), icon: '🛒', color: '#EF4444' },
+  { name: t('categories.rentUtilities'), icon: '🏠', color: '#60A5FA' },
+  { name: t('categories.restaurants'), icon: '🍽️', color: '#F97316' },
+  { name: t('categories.travel'), icon: '✈️', color: '#22C55E' },
+  { name: t('categories.transport'), icon: '🚗', color: '#22C55E' },
+  { name: t('categories.education'), icon: '📚', color: '#A855F7' },
+  { name: t('categories.gifts'), icon: '🎁', color: '#3B82F6' },
+  { name: t('categories.health'), icon: '🩺', color: '#EF4444' },
+  { name: t('categories.entertainment'), icon: '🎬', color: '#F59E0B' },
+  { name: t('categories.shopping'), icon: '🛍️', color: '#06B6D4' },
+  { name: t('categories.subscriptions'), icon: '💳', color: '#8B5CF6' },
 ];
 
-const SUGGESTED_INCOME_CATEGORIES: Array<{ name: string; icon: string; color: string }> = [
-  { name: 'Earned Income', icon: '💼', color: '#22C55E' },
-  { name: 'Profit Income', icon: '📈', color: '#10B981' },
-  { name: 'Interest Income', icon: '🏦', color: '#3B82F6' },
-  { name: 'Dividend Income', icon: '💸', color: '#60A5FA' },
-  { name: 'Rental Income', icon: '🏠', color: '#F59E0B' },
-  { name: 'Capital Gains', icon: '📊', color: '#A855F7' },
-  { name: 'Royalty Income', icon: '🎵', color: '#F97316' },
-  { name: 'Licensing Income', icon: '🧾', color: '#0EA5E9' },
-  { name: 'Portfolio Income', icon: '🧺', color: '#2DD4BF' },
+const getSuggestedIncomeCategories = (t: (key: string) => string) => [
+  { name: t('categories.earnedIncome'), icon: '💼', color: '#22C55E' },
+  { name: t('categories.profitIncome'), icon: '📈', color: '#10B981' },
+  { name: t('categories.interestIncome'), icon: '🏦', color: '#3B82F6' },
+  { name: t('categories.dividendIncome'), icon: '💸', color: '#60A5FA' },
+  { name: t('categories.rentalIncome'), icon: '🏠', color: '#F59E0B' },
+  { name: t('categories.capitalGains'), icon: '📊', color: '#A855F7' },
+  { name: t('categories.royaltyIncome'), icon: '🎵', color: '#F97316' },
+  { name: t('categories.licensingIncome'), icon: '🧾', color: '#0EA5E9' },
+  { name: t('categories.portfolioIncome'), icon: '🧺', color: '#2DD4BF' },
 ];
 
 function CategoryGrid({
@@ -408,6 +409,7 @@ function CategoryGrid({
   envelopes: Envelope[];
   onPick: (id: string) => void;
 }) {
+  const { t } = useTranslation();
   const q = query.trim().toLowerCase();
   const existingByName = new Map(
     envelopes.map(e => [e.name.trim().toLowerCase(), e]),
@@ -418,10 +420,10 @@ function CategoryGrid({
   // Show existing envelopes first
   envelopes
     .filter(e => e.name.toLowerCase().includes(q))
-    .forEach(e => tiles.push({ key: e.id, id: e.id, label: e.name, icon: e.icon, color: e.color }));
+    .forEach(e => tiles.push({ key: e.id, id: e.id, label: getTranslatedEnvelopeName(e.name, t), icon: e.icon, color: e.color }));
 
   // Then suggested categories that aren't present yet
-  const suggestions = type === 'income' ? SUGGESTED_INCOME_CATEGORIES : SUGGESTED_CATEGORIES;
+  const suggestions = type === 'income' ? getSuggestedIncomeCategories(t) : getSuggestedCategories(t);
   suggestions.filter(s => s.name.toLowerCase().includes(q)).forEach(s => {
     if (!existingByName.has(s.name.toLowerCase())) {
       tiles.push({ key: `suggest-${s.name}`, label: s.name, icon: s.icon, color: s.color, createIfNeeded: true });
@@ -429,29 +431,30 @@ function CategoryGrid({
   });
 
   // Always include "Add New Category"
-  tiles.push({ key: 'add-new', label: 'Add New Category', icon: '📚', color: '#B45309', createIfNeeded: true });
+  tiles.push({ key: 'add-new', label: t('categories.newCategory'), icon: '📚', color: '#B45309', createIfNeeded: true });
 
   return (
     <View style={styles.grid}>
-      {tiles.map(t => (
+      {tiles.map(tile => (
         <CategoryTile
-          key={t.key}
-          label={t.label}
-          icon={t.icon}
-          color={t.color}
+          key={tile.key}
+          label={tile.label}
+          icon={tile.icon}
+          color={tile.color}
           onPress={async () => {
-            if (t.id) {
-              onPick(t.id);
+            if (tile.id) {
+              onPick(tile.id);
               return;
             }
             // Create if needed
             const now = new Date().toISOString();
             const id = `env-${Date.now()}`;
+            const isNewCategory = tile.label === t('categories.newCategory');
             await useAppStore.getState().addEnvelope({
               id,
-              name: t.label === 'Add New Category' ? 'New Category' : t.label,
-              icon: t.label === 'Add New Category' ? '🗂️' : t.icon,
-              color: t.color,
+              name: isNewCategory ? t('categories.newCategory') : tile.label,
+              icon: isNewCategory ? '🗂️' : tile.icon,
+              color: tile.color,
               budgeted_amount: 0,
               budget_interval: 'monthly',
               created_at: now,
@@ -464,7 +467,7 @@ function CategoryGrid({
   );
 }
 
-async function pickFiles(imagesOnly = false) {
+async function pickFiles(imagesOnly = false, t?: (key: string) => string) {
   // Load module lazily so the app still runs if it's not installed
   let DocumentPicker: any;
   let isCancelFn: ((e: any) => boolean) | undefined;
@@ -477,8 +480,8 @@ async function pickFiles(imagesOnly = false) {
     pickerTypes = mod.types || DocumentPicker.types;
   } catch (e) {
     Alert.alert(
-      'Attachment Picker Not Installed',
-      'Run "yarn add react-native-document-picker" and then "npx pod-install" (iOS) to enable file attachments.',
+      t ? t('attachments.attachmentPickerNotInstalled') : 'Attachment Picker Not Installed',
+      t ? t('attachments.attachmentPickerNotInstalledBody') : 'Attachment picker not installed',
     );
     return [] as Attachment[];
   }
@@ -489,7 +492,7 @@ async function pickFiles(imagesOnly = false) {
     const res: any[] = await DocumentPicker.pickMultiple(opts);
     return res.map((r: any) => ({
       id: `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
-      name: r.name ?? 'Attachment',
+      name: r.name ?? (t ? t('attachments.attachment') : 'Attachment'),
       uri: r.fileCopyUri ?? r.uri,
       mime: r.type ?? null,
       size: r.size ?? null,
@@ -501,7 +504,7 @@ async function pickFiles(imagesOnly = false) {
       const r: any = await DocumentPicker.pick({ type: imagesOnly ? (pickerTypes?.images || pickerTypes?.image) : pickerTypes?.allFiles, copyTo: 'cachesDirectory' });
       const item: Attachment = {
         id: `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
-        name: r.name ?? 'Attachment',
+        name: r.name ?? (t ? t('attachments.attachment') : 'Attachment'),
         uri: r.fileCopyUri ?? r.uri,
         mime: r.type ?? null,
         size: r.size ?? null,
@@ -509,13 +512,13 @@ async function pickFiles(imagesOnly = false) {
       return [item];
     } catch (err2: any) {
       if (isCancelFn && isCancelFn(err2)) return [] as Attachment[];
-      Alert.alert('Unable to attach file', err2?.message || err?.message || 'An unexpected error occurred while selecting a file.');
+      Alert.alert(t ? t('attachments.unableToAttachFile') : 'Unable to attach file', err2?.message || err?.message || 'An unexpected error occurred while selecting a file.');
       return [] as Attachment[];
     }
   }
 }
 
-async function pickFromMediaLibrary(): Promise<Attachment[]> {
+async function pickFromMediaLibrary(t?: (key: string) => string): Promise<Attachment[]> {
   return new Promise(resolve => {
     const options: any = {
       mediaType: 'photo',
@@ -528,17 +531,17 @@ async function pickFromMediaLibrary(): Promise<Attachment[]> {
       if (!response || response.didCancel) return resolve([]);
       if (response.errorCode) {
         // Permission denied or unavailable; inform and fall back to images-only Files picker
-        if (response.errorMessage) {
-          Alert.alert('Photos Access', response.errorMessage);
+        if (response.errorMessage && t) {
+          Alert.alert(t('attachments.photosAccess'), response.errorMessage);
         }
-        pickFiles(true).then(resolve);
+        pickFiles(true, t).then(resolve);
         return;
       }
       const assets: any[] = response.assets || [];
       resolve(
         assets.map(a => ({
           id: `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
-          name: a.fileName || 'Image',
+          name: a.fileName || (t ? t('attachments.image') : 'Image'),
           uri: a.uri,
           mime: a.type || 'image/*',
           size: a.fileSize || null,

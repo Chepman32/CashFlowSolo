@@ -10,6 +10,7 @@ import AddTransactionModal from '../components/AddTransactionModal';
 import RingProgress from '../components/RingProgress';
 import EnvelopeSummaryCard from '../components/EnvelopeSummaryCard';
 import CurrencyDisplay from '../components/CurrencyDisplay';
+import { getTranslatedEnvelopeName } from '../utils/translationHelpers';
 
 export default function Dashboard() {
   const { t } = useTranslation();
@@ -87,13 +88,13 @@ export default function Dashboard() {
               {topEnvelope && (
                 <View style={styles.legendRow}>
                   <View style={[styles.dot, { backgroundColor: topEnvelope.color }]} />
-                  <Text style={{ color: theme.textPrimary }}> {topEnvelope.name}</Text>
+                  <Text style={{ color: theme.textPrimary }}> {getTranslatedEnvelopeName(topEnvelope.name, t)}</Text>
                 </View>
               )}
               {largestExpense && (
                 <View style={styles.legendRow}>
                   <View style={[styles.dot, { backgroundColor: colors.accents[2] }]} />
-                  <Text style={{ color: theme.textPrimary }}> {largestExpense.note || 'Shopping trip'}</Text>
+                  <Text style={{ color: theme.textPrimary }}> {largestExpense.note || t('envelope.shoppingTrip')}</Text>
                 </View>
               )}
             </View>

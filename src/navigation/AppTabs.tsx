@@ -3,6 +3,7 @@ import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { NavigationContainer, DefaultTheme, DarkTheme } from '@react-navigation/native';
 import { enableScreens } from 'react-native-screens';
 import { useAppTheme } from '../theme/ThemeProvider';
+import { useTranslation } from 'react-i18next';
 import Feather from 'react-native-vector-icons/Feather';
 import Dashboard from '../screens/Dashboard';
 import Envelopes from '../screens/Envelopes';
@@ -27,6 +28,7 @@ function Icon({ name, focused, color }: { name: string; focused: boolean; color:
 export default function AppTabs() {
   enableScreens(true);
   const { isDark } = useAppTheme();
+  const { t } = useTranslation();
   const activeColor = isDark ? '#14B8A6' : '#14B8A6';
   const inactiveColor = isDark ? '#9CA3AF' : '#6B7280';
   return (
@@ -42,27 +44,42 @@ export default function AppTabs() {
         <Tab.Screen
           name="Dashboard"
           component={Dashboard}
-          options={{ tabBarIcon: ({ focused, color }) => <Icon name="home" focused={focused} color={color} /> }}
+          options={{
+            tabBarLabel: t('tabs.dashboard'),
+            tabBarIcon: ({ focused, color }) => <Icon name="home" focused={focused} color={color} />
+          }}
         />
         <Tab.Screen
           name="Envelopes"
           component={Envelopes as any}
-          options={{ tabBarIcon: ({ focused, color }) => <Icon name="mail" focused={focused} color={color} /> }}
+          options={{
+            tabBarLabel: t('tabs.envelopes'),
+            tabBarIcon: ({ focused, color }) => <Icon name="mail" focused={focused} color={color} />
+          }}
         />
         <Tab.Screen
           name="Transactions"
           component={Transactions}
-          options={{ tabBarIcon: ({ focused, color }) => <Icon name="list" focused={focused} color={color} /> }}
+          options={{
+            tabBarLabel: t('tabs.transactions'),
+            tabBarIcon: ({ focused, color }) => <Icon name="list" focused={focused} color={color} />
+          }}
         />
         <Tab.Screen
           name="Challenges"
           component={Challenges}
-          options={{ tabBarIcon: ({ focused, color }) => <Icon name="award" focused={focused} color={color} /> }}
+          options={{
+            tabBarLabel: t('tabs.challenges'),
+            tabBarIcon: ({ focused, color }) => <Icon name="award" focused={focused} color={color} />
+          }}
         />
         <Tab.Screen
           name="Settings"
           component={Settings}
-          options={{ tabBarIcon: ({ focused, color }) => <Icon name="settings" focused={focused} color={color} /> }}
+          options={{
+            tabBarLabel: t('tabs.settings'),
+            tabBarIcon: ({ focused, color }) => <Icon name="settings" focused={focused} color={color} />
+          }}
         />
       </Tab.Navigator>
     </NavigationContainer>

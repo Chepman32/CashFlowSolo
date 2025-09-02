@@ -3,7 +3,7 @@ import { View, Text, StyleSheet, ScrollView, Dimensions, Pressable, useColorSche
 import { useTranslation } from 'react-i18next';
 import { colors } from '../theme/colors';
 import { useAppStore } from '../store/useAppStore';
-import { CURRENCIES, type CurrencyCode, currencyService } from '../services/currencyService';
+import { CURRENCIES, type CurrencyCode } from '../services/currencyService';
 
 const { width } = Dimensions.get('window');
 
@@ -28,8 +28,8 @@ export default function Onboarding({ onDone }: { onDone: () => void }) {
   async function finish() {
     const now = new Date().toISOString();
     await updateSettings({ base_currency: currency });
-    await addAccount({ id: `acc-${Date.now()}`, name: 'Cash', icon: '💵', initial_balance: 0, created_at: now });
-    await addEnvelope({ id: `env-${Date.now()}`, name: 'Groceries', icon: '🛒', color: colors.accents[0], budgeted_amount: 500, budget_interval: 'monthly', created_at: now });
+    await addAccount({ id: `acc-${Date.now()}`, name: t('onboarding.defaultAccountName'), icon: '💵', initial_balance: 0, created_at: now });
+    await addEnvelope({ id: `env-${Date.now()}`, name: t('onboarding.defaultEnvelopeName'), icon: '🛒', color: colors.accents[0], budgeted_amount: 500, budget_interval: 'monthly', created_at: now });
     onDone();
   }
 
@@ -86,7 +86,7 @@ function CurrencyPage({ currency, onSelect }: { currency: CurrencyCode; onSelect
       <Text style={[styles.body, { color: theme.textSecondary }]}>{t('onboarding.baseCurrencyBody')}</Text>
       <View style={{ marginTop: 16, gap: 8 }}>
         {Object.values(CURRENCIES).map(currencyInfo => {
-          const localizedCurrency = currencyService.getLocalizedCurrencyInfo(currencyInfo.code, t);
+          const localizedCurrency = { name: t(`currency.${currencyInfo.code.toLowerCase()}`), code: currencyInfo.code, symbol: currencyInfo.symbol, flag: currencyInfo.flag };
           return (
             <Pressable key={currencyInfo.code} onPress={() => onSelect(currencyInfo.code)} style={[styles.row, { borderColor: theme.border, backgroundColor: currency === currencyInfo.code ? colors.light.primary : 'transparent' }]}> 
               <Text style={{ color: currency === currencyInfo.code ? 'white' : theme.textPrimary, fontWeight: '700' }}>

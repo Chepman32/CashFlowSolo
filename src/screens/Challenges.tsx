@@ -26,7 +26,7 @@ export default function Challenges() {
               return (
                 <Pressable
                   key={key}
-                  onPress={() => toggle(ch.id, key)}
+                  onPress={() => toggleChallengeKey(ch.id, key)}
                   style={[styles.cell, { borderColor: theme.border, backgroundColor: done ? colors.light.primary : 'transparent' }]}
                 >
                   <Text style={{ color: done ? 'white' : theme.textSecondary, fontSize: 12 }}>{i + 1}</Text>

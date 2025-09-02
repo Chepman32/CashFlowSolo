@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next';
 import { colors } from '../theme/colors';
 import { useAppStore } from '../store/useAppStore';
 import EnvelopeCard from '../components/EnvelopeCard';
+import CurrencyDisplay from '../components/CurrencyDisplay';
 
 export default function Envelopes({ onOpenEnvelope }: { onOpenEnvelope?: (id: string) => void }) {
   const { t } = useTranslation();
@@ -27,10 +28,10 @@ export default function Envelopes({ onOpenEnvelope }: { onOpenEnvelope?: (id: st
     <ScrollView contentContainerStyle={{ padding: 16, paddingBottom: 40 }}>
               <Text style={[styles.headerTitle, { color: theme.textPrimary }]}>{t('screens.envelopes')}</Text>
 
-      <View style={[styles.summary, { backgroundColor: theme.surface }]}> 
-        <Stat label={t('common.budgeted')} value={`$${budgeted.toFixed(2)}`} />
-        <Stat label={t('common.spent')} value={`$${spent.toFixed(2)}`} />
-        <Stat label={t('common.remaining')} value={`$${remaining.toFixed(2)}`} />
+      <View style={[styles.summary, { backgroundColor: theme.surface }]}>
+        <Stat label={t('common.budgeted')} value={budgeted} />
+        <Stat label={t('common.spent')} value={spent} />
+        <Stat label={t('common.remaining')} value={remaining} />
       </View>
 
       {envelopes.map(env => (
@@ -42,13 +43,19 @@ export default function Envelopes({ onOpenEnvelope }: { onOpenEnvelope?: (id: st
   );
 }
 
-function Stat({ label, value }: { label: string; value: string }) {
+function Stat({ label, value }: { label: string; value: number }) {
   const isDark = useColorScheme() === 'dark';
   const theme = isDark ? colors.dark : colors.light;
+  const baseCurrency = useAppStore.getState().settings.base_currency;
+
   return (
     <View style={{ flex: 1 }}>
       <Text style={{ color: theme.textSecondary, fontSize: 12 }}>{label}</Text>
-      <Text style={{ color: theme.textPrimary, fontWeight: '800' }}>{value}</Text>
+      <CurrencyDisplay
+        amount={value}
+        currency={baseCurrency}
+        style={{ color: theme.textPrimary, fontWeight: '800' }}
+      />
     </View>
   );
 }

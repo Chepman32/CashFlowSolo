@@ -25,7 +25,7 @@ export default function Settings() {
           <Text style={{ color: theme.textSecondary, marginRight: 8 }}>
             {CURRENCIES[settings.base_currency as CurrencyCode]?.flag} {settings.base_currency}
           </Text>
-          <Text style={{ color: theme.textSecondary }}>▼</Text>
+          <Text style={{ color: theme.textSecondary }}>{t('symbols.dropdown')}</Text>
         </Pressable>
       </View>
 
@@ -45,13 +45,13 @@ export default function Settings() {
       </View>
       <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginBottom: 8 }}>
         {[
-          { code: 'en', label: 'English' },
-          { code: 'ru', label: 'Русский' },
-          { code: 'es', label: 'Español' },
-          { code: 'fr', label: 'Français' },
-          { code: 'de', label: 'Deutsch' },
-          { code: 'zh', label: '中文' },
-          { code: 'ja', label: '日本語' },
+          { code: 'en', label: t('languages.english') },
+          { code: 'ru', label: t('languages.russian') },
+          { code: 'es', label: t('languages.spanish') },
+          { code: 'fr', label: t('languages.french') },
+          { code: 'de', label: t('languages.german') },
+          { code: 'zh', label: t('languages.chinese') },
+          { code: 'ja', label: t('languages.japanese') },
         ].map(lang => (
           <Pressable key={lang.code} onPress={async () => { await updateSettings({ language: lang.code }); i18n.changeLanguage(lang.code); }} style={[styles.chip, { borderColor: theme.border, backgroundColor: (settings as any).language === lang.code ? colors.light.primary : 'transparent' }]}> 
             <Text style={{ color: (settings as any).language === lang.code ? 'white' : theme.textPrimary, fontWeight: '700' }}>{lang.label}</Text>
@@ -113,7 +113,7 @@ export default function Settings() {
                     </View>
                   </View>
                   {settings.base_currency === currency.code && (
-                    <Text style={{ color: 'white', fontSize: 20 }}>✓</Text>
+                    <Text style={{ color: 'white', fontSize: 20 }}>{t('symbols.checkmark')}</Text>
                   )}
                 </Pressable>
               );
