@@ -2426,6 +2426,11 @@ PODS:
     - ReactCommon/turbomodule/core
     - SocketRocket
     - Yoga
+  - RNNotifee (7.9.0):
+    - React-Core
+    - RNNotifee/NotifeeCore (= 7.9.0)
+  - RNNotifee/NotifeeCore (7.9.0):
+    - React-Core
   - RNReanimated (4.1.0):
     - boost
     - DoubleConversion
@@ -2835,6 +2840,7 @@ DEPENDENCIES:
   - ReactCodegen (from `build/generated/ios`)
   - ReactCommon/turbomodule/core (from `../node_modules/react-native/ReactCommon`)
   - RNGestureHandler (from `../node_modules/react-native-gesture-handler`)
+  - "RNNotifee (from `../node_modules/@notifee/react-native`)"
   - RNReanimated (from `../node_modules/react-native-reanimated`)
   - RNScreens (from `../node_modules/react-native-screens`)
   - RNSVG (from `../node_modules/react-native-svg`)
@@ -3001,6 +3007,8 @@ EXTERNAL SOURCES:
     :path: "../node_modules/react-native/ReactCommon"
   RNGestureHandler:
     :path: "../node_modules/react-native-gesture-handler"
+  RNNotifee:
+    :path: "../node_modules/@notifee/react-native"
   RNReanimated:
     :path: "../node_modules/react-native-reanimated"
   RNScreens:
@@ -3094,6 +3102,7 @@ SPEC CHECKSUMS:
   ReactCodegen: 4d203eddf6f977caa324640a20f92e70408d648b
   ReactCommon: ce5d4226dfaf9d5dacbef57b4528819e39d3a120
   RNGestureHandler: 3a73f098d74712952870e948b3d9cf7b6cae9961
+  RNNotifee: 271cfeb505183d2cd1b858c14c3968b6ca30a642
   RNReanimated: 9de34f0313c4177a34c079ca9fce6f1f278bff24
   RNScreens: db22525a8ed56bb87ab038b8f03a050bf40e6ed8
   RNSVG: 6f39605a4c4d200b11435c35bd077553c6b5963a
