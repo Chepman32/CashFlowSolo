@@ -11,6 +11,8 @@ import AppTabs from './src/navigation/AppTabs';
 import { hydrateFromDB, seedIfEmpty } from './src/store/persistence';
 import { useAppStore } from './src/store/useAppStore';
 import Onboarding from './src/screens/Onboarding';
+import LockScreen from './src/components/LockScreen';
+import { authService } from './src/services/authService';
 import { ThemeProvider, useAppTheme } from './src/theme/ThemeProvider';
 import './src/i18n';
 import i18n from './src/i18n';
@@ -18,10 +20,13 @@ import i18n from './src/i18n';
 function InnerApp() {
   const { isDark, colors: palette } = useAppTheme();
   const [booted, setBooted] = useState(false);
+  const [isLocked, setIsLocked] = useState(false);
+  const [needsPasscodeSetup, setNeedsPasscodeSetup] = useState(false);
   const setHydrated = useAppStore.setState;
   const accounts = useAppStore(s => s.accounts);
   const envelopes = useAppStore(s => s.envelopes);
   const language = useAppStore(s => s.settings.language);
+  const passcodeEnabled = useAppStore(s => s.settings.passcode_enabled);
   const initializeGamification = useAppStore(s => s.initializeGamification);
   const checkAndUpdateStreak = useAppStore(s => s.checkAndUpdateStreak);
 
@@ -50,6 +55,20 @@ function InnerApp() {
             transactions: data.transactions,
             savings_challenges: data.savings_challenges,
           });
+
+          // Check if passcode is enabled and handle lock screen
+          if (data.settings.passcode_enabled) {
+            const { available } =
+              await authService.checkBiometricAvailability();
+            const hasPasscode = await authService.hasPasscode();
+
+            if (available || hasPasscode) {
+              setIsLocked(true);
+            } else {
+              // Passcode enabled but no biometric and no PIN set - need setup
+              setNeedsPasscodeSetup(true);
+            }
+          }
         }
 
         // Initialize gamification system
@@ -89,6 +108,17 @@ function InnerApp() {
               Preparing your data…
             </Text>
           </View>
+        ) : isLocked ? (
+          <LockScreen mode="unlock" onUnlock={() => setIsLocked(false)} />
+        ) : needsPasscodeSetup ? (
+          <LockScreen
+            mode="setup"
+            onUnlock={() => setNeedsPasscodeSetup(false)}
+            onSetupComplete={async passcode => {
+              await authService.savePasscode(passcode);
+              setNeedsPasscodeSetup(false);
+            }}
+          />
         ) : accounts.length === 0 || envelopes.length === 0 ? (
           <Onboarding
             onDone={() => {

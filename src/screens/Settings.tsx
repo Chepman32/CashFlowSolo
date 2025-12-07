@@ -13,6 +13,8 @@ import {
   Linking,
   Platform,
 } from 'react-native';
+import LockScreen from '../components/LockScreen';
+import { authService } from '../services/authService';
 import Animated, {
   useAnimatedStyle,
   useSharedValue,
@@ -111,8 +113,19 @@ export default function Settings() {
   const [showCurrencyPicker, setShowCurrencyPicker] = useState(false);
   const [languageExpanded, setLanguageExpanded] = useState(false);
   const [notificationsEnabled, setNotificationsEnabled] = useState(false);
+  const [showPasscodeSetup, setShowPasscodeSetup] = useState(false);
+  const [biometricAvailable, setBiometricAvailable] = useState(false);
   const updateSettings = useAppStore(s => s.updateSettings);
   const { t, i18n } = useTranslation();
+
+  // Check biometric availability on mount
+  useEffect(() => {
+    const checkBiometric = async () => {
+      const { available } = await authService.checkBiometricAvailability();
+      setBiometricAvailable(available);
+    };
+    checkBiometric();
+  }, []);
 
   // Check notification permission status on mount
   const checkNotificationPermission = async () => {
@@ -456,8 +469,55 @@ export default function Settings() {
           <Text style={{ color: theme.textPrimary, fontWeight: '600' }}>
             {t('settings.passcode')}
           </Text>
-          <Switch value={settings.passcode_enabled} onChange={() => {}} />
+          <Switch
+            value={settings.passcode_enabled}
+            onValueChange={async value => {
+              if (value) {
+                // Enable passcode
+                if (biometricAvailable) {
+                  // Biometric available - authenticate first, then enable
+                  const { biometryType } =
+                    await authService.checkBiometricAvailability();
+                  const promptMessage =
+                    biometryType === 'FaceID'
+                      ? t('lock.faceIdPrompt')
+                      : t('lock.touchIdPrompt');
+                  const success = await authService.authenticateWithBiometrics(
+                    promptMessage || 'Authenticate to enable passcode',
+                  );
+                  if (success) {
+                    await updateSettings({ passcode_enabled: true });
+                  }
+                } else {
+                  // No biometric - show PIN setup
+                  setShowPasscodeSetup(true);
+                }
+              } else {
+                // Disable passcode
+                await authService.clearPasscode();
+                await updateSettings({ passcode_enabled: false });
+              }
+            }}
+          />
         </View>
+
+        {/* Passcode Setup Modal */}
+        <Modal
+          visible={showPasscodeSetup}
+          animationType="slide"
+          presentationStyle="fullScreen"
+          onRequestClose={() => setShowPasscodeSetup(false)}
+        >
+          <LockScreen
+            mode="setup"
+            onUnlock={() => setShowPasscodeSetup(false)}
+            onSetupComplete={async passcode => {
+              await authService.savePasscode(passcode);
+              await updateSettings({ passcode_enabled: true });
+              setShowPasscodeSetup(false);
+            }}
+          />
+        </Modal>
 
         {/* Notifications */}
         <View style={[styles.row, { borderColor: theme.border }]}>
