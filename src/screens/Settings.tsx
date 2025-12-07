@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import {
   View,
   Text,
@@ -15,13 +15,13 @@ import {
 } from 'react-native';
 import LockScreen from '../components/LockScreen';
 import { authService } from '../services/authService';
+import triggerHaptic from '../utils/haptics';
 import Animated, {
   useAnimatedStyle,
   useSharedValue,
   withTiming,
   Easing,
 } from 'react-native-reanimated';
-import { colors } from '../theme/colors';
 import { useAppStore } from '../store/useAppStore';
 import { useAppTheme } from '../theme/ThemeProvider';
 import { useTranslation } from 'react-i18next';
@@ -118,6 +118,16 @@ export default function Settings() {
   const updateSettings = useAppStore(s => s.updateSettings);
   const { t, i18n } = useTranslation();
 
+  // Haptic feedback helper
+  const haptic = useCallback(
+    (type: 'light' | 'medium' | 'selection' = 'light') => {
+      if (settings.haptics_enabled !== false) {
+        triggerHaptic(type);
+      }
+    },
+    [settings.haptics_enabled],
+  );
+
   // Check biometric availability on mount
   useEffect(() => {
     const checkBiometric = async () => {
@@ -197,7 +207,10 @@ export default function Settings() {
             {t('settings.base_currency')}
           </Text>
           <Pressable
-            onPress={() => setShowCurrencyPicker(true)}
+            onPress={() => {
+              haptic('light');
+              setShowCurrencyPicker(true);
+            }}
             style={styles.currencySelector}
           >
             <Text style={{ color: theme.textSecondary, marginRight: 8 }}>
@@ -227,15 +240,16 @@ export default function Settings() {
           {THEMES.map(({ mode, labelKey }) => (
             <Pressable
               key={mode}
-              onPress={async () => updateSettings({ theme: mode })}
+              onPress={async () => {
+                haptic('selection');
+                updateSettings({ theme: mode });
+              }}
               style={[
                 styles.chip,
                 {
                   borderColor: theme.border,
                   backgroundColor:
-                    settings.theme === mode
-                      ? colors.light.primary
-                      : 'transparent',
+                    settings.theme === mode ? theme.primary : 'transparent',
                 },
               ]}
             >
@@ -259,6 +273,7 @@ export default function Settings() {
           <Switch
             value={settings.sound_enabled ?? true}
             onValueChange={async value => {
+              haptic('light');
               await updateSettings({ sound_enabled: value });
             }}
           />
@@ -272,6 +287,10 @@ export default function Settings() {
           <Switch
             value={settings.haptics_enabled ?? true}
             onValueChange={async value => {
+              // Trigger haptic before disabling (so user feels it)
+              if (value || settings.haptics_enabled !== false) {
+                triggerHaptic('light');
+              }
               await updateSettings({ haptics_enabled: value });
             }}
           />
@@ -280,7 +299,10 @@ export default function Settings() {
         {/* Language Accordion */}
         <Pressable
           style={[styles.row, { borderColor: theme.border }]}
-          onPress={() => setLanguageExpanded(!languageExpanded)}
+          onPress={() => {
+            haptic('light');
+            setLanguageExpanded(!languageExpanded);
+          }}
         >
           <Text style={{ color: theme.textPrimary, fontWeight: '600' }}>
             {t('settings.language')}
@@ -315,6 +337,7 @@ export default function Settings() {
             <Pressable
               key={lang.code}
               onPress={async () => {
+                haptic('selection');
                 // Change i18n language first for immediate UI update
                 await i18n.changeLanguage(lang.code);
                 // Then persist to store/database
@@ -327,7 +350,7 @@ export default function Settings() {
                   borderColor: theme.border,
                   backgroundColor:
                     settings.language === lang.code
-                      ? colors.light.primary
+                      ? theme.primary
                       : 'transparent',
                 },
               ]}
@@ -403,6 +426,7 @@ export default function Settings() {
                   <Pressable
                     key={currency.code}
                     onPress={async () => {
+                      haptic('selection');
                       if (currency.code !== settings.base_currency) {
                         await updateSettings({ base_currency: currency.code });
                       }
@@ -414,7 +438,7 @@ export default function Settings() {
                         borderColor: theme.border,
                         backgroundColor:
                           settings.base_currency === currency.code
-                            ? colors.light.primary
+                            ? theme.primary
                             : 'transparent',
                       },
                     ]}
@@ -472,6 +496,7 @@ export default function Settings() {
           <Switch
             value={settings.passcode_enabled}
             onValueChange={async value => {
+              haptic('light');
               if (value) {
                 // Enable passcode
                 if (biometricAvailable) {
@@ -527,6 +552,7 @@ export default function Settings() {
           <Switch
             value={notificationsEnabled}
             onValueChange={async () => {
+              haptic('light');
               try {
                 const notifee = require('@notifee/react-native').default;
                 const currentStatus = await checkNotificationPermission();

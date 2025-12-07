@@ -16,7 +16,7 @@ import Animated, {
 import { useAppTheme } from '../theme/ThemeProvider';
 import { useTranslation } from 'react-i18next';
 import { authService, BiometricType } from '../services/authService';
-import { colors } from '../theme/colors';
+import triggerHaptic from '../utils/haptics';
 
 interface LockScreenProps {
   onUnlock: () => void;
@@ -95,9 +95,7 @@ export default function LockScreen({
       withTiming(10, { duration: 50 }),
       withTiming(0, { duration: 50 }),
     );
-    if (Platform.OS !== 'web') {
-      Vibration.vibrate(100);
-    }
+    triggerHaptic('error');
   }, [shakeX]);
 
   const animatedStyle = useAnimatedStyle(() => ({
@@ -105,6 +103,7 @@ export default function LockScreen({
   }));
 
   const handleKeyPress = async (key: string) => {
+    triggerHaptic('light');
     if (key === 'delete') {
       if (isConfirming) {
         setConfirmPin(prev => prev.slice(0, -1));
@@ -199,9 +198,7 @@ export default function LockScreen({
               styles.dot,
               {
                 backgroundColor:
-                  i < currentPinDisplay.length
-                    ? colors.light.primary
-                    : theme.border,
+                  i < currentPinDisplay.length ? theme.primary : theme.border,
               },
             ]}
           />
@@ -237,12 +234,7 @@ export default function LockScreen({
                   },
                 ]}
               >
-                <Text
-                  style={[
-                    styles.biometricIcon,
-                    { color: colors.light.primary },
-                  ]}
-                >
+                <Text style={[styles.biometricIcon, { color: theme.primary }]}>
                   {biometricType === 'FaceID' ? '👤' : '👆'}
                 </Text>
               </Pressable>

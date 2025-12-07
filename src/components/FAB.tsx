@@ -1,15 +1,38 @@
 import React from 'react';
 import { Pressable, StyleSheet, Text, ViewStyle } from 'react-native';
-import Animated, { useAnimatedStyle, useSharedValue, withSpring } from 'react-native-reanimated';
-import { colors } from '../theme/colors';
+import Animated, {
+  useAnimatedStyle,
+  useSharedValue,
+  withSpring,
+} from 'react-native-reanimated';
+import triggerHaptic from '../utils/haptics';
+import { useAppStore } from '../store/useAppStore';
+import { useAppTheme } from '../theme/ThemeProvider';
 
-export function FAB({ onPress, style }: { onPress: () => void; style?: ViewStyle }) {
+export function FAB({
+  onPress,
+  style,
+}: {
+  onPress: () => void;
+  style?: ViewStyle;
+}) {
   const scale = useSharedValue(1);
-  const aStyle = useAnimatedStyle(() => ({ transform: [{ scale: scale.value }] }));
+  const hapticsEnabled = useAppStore(s => s.settings.haptics_enabled);
+  const { colors: theme } = useAppTheme();
+  const aStyle = useAnimatedStyle(() => ({
+    transform: [{ scale: scale.value }],
+  }));
   return (
-    <Animated.View style={[styles.fab, style, aStyle]}> 
+    <Animated.View
+      style={[styles.fab, { backgroundColor: theme.primary }, style, aStyle]}
+    >
       <Pressable
-        onPress={onPress}
+        onPress={() => {
+          if (hapticsEnabled !== false) {
+            triggerHaptic('medium');
+          }
+          onPress();
+        }}
         onPressIn={() => (scale.value = withSpring(0.94))}
         onPressOut={() => (scale.value = withSpring(1))}
         accessibilityRole="button"
@@ -26,7 +49,7 @@ const styles = StyleSheet.create({
     position: 'absolute',
     right: 16,
     bottom: 24,
-    backgroundColor: colors.light.primary,
+    // backgroundColor set dynamically via theme.primary
     width: 56,
     height: 56,
     borderRadius: 28,

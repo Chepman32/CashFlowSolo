@@ -24,11 +24,11 @@ export const colors = {
     border: '#FDE68A',
   },
   mono: {
-    primary: '#6B7280',
-    background: '#F3F4F6',
-    surface: '#E5E7EB',
+    primary: '#4B5563',
+    background: '#E5E7EB',
+    surface: '#F3F4F6',
     textPrimary: '#1F2937',
-    textSecondary: '#4B5563',
+    textSecondary: '#6B7280',
     border: '#D1D5DB',
   },
   accents: [
@@ -42,4 +42,3 @@ export const colors = {
     '#F43F5E',
   ],
 } as const;
-
