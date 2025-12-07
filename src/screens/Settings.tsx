@@ -375,6 +375,7 @@ export default function Settings() {
               { backgroundColor: theme.background },
             ]}
           >
+            <View style={styles.swipeIndicator} />
             <View style={styles.modalHeader}>
               <Text style={[styles.modalTitle, { color: theme.textPrimary }]}>
                 {t('currency.selectBase')}
@@ -581,7 +582,15 @@ const styles = StyleSheet.create({
   },
   modalContainer: {
     flex: 1,
-    paddingTop: 50,
+    paddingTop: 12,
+  },
+  swipeIndicator: {
+    width: 36,
+    height: 5,
+    borderRadius: 2.5,
+    backgroundColor: '#D1D5DB',
+    alignSelf: 'center',
+    marginBottom: 8,
   },
   modalHeader: {
     flexDirection: 'row',
