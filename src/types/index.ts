@@ -1,16 +1,20 @@
 export type CurrencyCode = 'USD' | 'EUR' | 'GBP';
 
+export type ThemeMode = 'light' | 'dark' | 'solar' | 'mono' | 'system';
+
 export interface Settings {
   id: string;
   base_currency: CurrencyCode;
   is_pro: boolean;
   passcode_enabled: boolean;
-  theme: 'light' | 'dark' | 'system';
-  language?: string; // e.g., 'en', 'ru', 'es', 'fr', 'de', 'zh', 'ja'
+  theme: ThemeMode;
+  language?: string;
   last_app_open?: string; // ISO date
   streak_days?: number;
   total_score?: number;
   notifications_enabled?: boolean;
+  sound_enabled?: boolean;
+  haptics_enabled?: boolean;
 }
 
 export interface Account {

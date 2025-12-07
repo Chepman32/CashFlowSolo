@@ -1,6 +1,13 @@
 import { Q } from '@nozbe/watermelondb';
 import { getDatabase } from '../db';
-import type { Account, Attachment, Envelope, SavingsChallenge, Settings, Transaction } from '../types';
+import type {
+  Account,
+  Attachment,
+  Envelope,
+  SavingsChallenge,
+  Settings,
+  Transaction,
+} from '../types';
 
 export async function hydrateFromDB(): Promise<{
   settings: Settings | null;
@@ -13,7 +20,10 @@ export async function hydrateFromDB(): Promise<{
   const [settingsModel] = await db.get('settings').query().fetch();
   const accountsModels = await db.get('accounts').query().fetch();
   const envelopesModels = await db.get('envelopes').query().fetch();
-  const txModels = await db.get('transactions').query(Q.sortBy('date', Q.desc)).fetch();
+  const txModels = await db
+    .get('transactions')
+    .query(Q.sortBy('date', Q.desc))
+    .fetch();
   const chModels = await db.get('savings_challenges').query().fetch();
 
   const settings: Settings | null = settingsModel
@@ -23,7 +33,15 @@ export async function hydrateFromDB(): Promise<{
         is_pro: settingsModel.is_pro,
         passcode_enabled: settingsModel.passcode_enabled,
         theme: settingsModel.theme as Settings['theme'],
-        language: (settingsModel as any).language || 'en',
+        language: settingsModel.language || 'en',
+        last_app_open: settingsModel.last_app_open
+          ? new Date(settingsModel.last_app_open).toISOString()
+          : undefined,
+        streak_days: settingsModel.streak_days ?? 0,
+        total_score: settingsModel.total_score ?? 0,
+        notifications_enabled: settingsModel.notifications_enabled ?? true,
+        sound_enabled: settingsModel.sound_enabled ?? true,
+        haptics_enabled: settingsModel.haptics_enabled ?? true,
       }
     : null;
 
@@ -57,7 +75,9 @@ export async function hydrateFromDB(): Promise<{
     envelope_id: t.envelope_id ?? undefined,
     account_id: t.account_id,
     transfer_to_account_id: t.transfer_to_account_id ?? undefined,
-    attachments: t.attachments ? (JSON.parse(t.attachments) as Attachment[]) : undefined,
+    attachments: t.attachments
+      ? (JSON.parse(t.attachments) as Attachment[])
+      : undefined,
   }));
 
   const savings_challenges: SavingsChallenge[] = chModels.map(c => ({
@@ -89,7 +109,7 @@ export async function seedIfEmpty() {
       // @ts-ignore
       s.theme = 'system';
       // @ts-ignore
-      ;(s as any).language = 'en';
+      (s as any).language = 'en';
     });
 
     // No sample accounts/envelopes/transactions; onboarding will create them.

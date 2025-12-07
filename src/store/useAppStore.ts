@@ -1,6 +1,16 @@
 import { create } from 'zustand';
 import { getDatabase } from '../db';
-import type { Account, Envelope, SavingsChallenge, Settings, Transaction, Achievement, UserAchievement, Reward, AppNotification } from '../types';
+import type {
+  Account,
+  Envelope,
+  SavingsChallenge,
+  Settings,
+  Transaction,
+  Achievement,
+  UserAchievement,
+  Reward,
+  AppNotification,
+} from '../types';
 import { gamificationService } from '../services/gamificationService';
 
 type AppState = {
@@ -23,7 +33,10 @@ type AppState = {
   loadUserAchievements: () => Promise<void>;
   loadRewards: () => Promise<void>;
   loadNotifications: () => Promise<void>;
-  updateAchievementProgress: (achievementKey: string, progress: number) => Promise<void>;
+  updateAchievementProgress: (
+    achievementKey: string,
+    progress: number,
+  ) => Promise<void>;
   claimReward: (rewardId: string) => Promise<void>;
   checkAndUpdateStreak: () => Promise<void>;
   initializeGamification: () => Promise<void>;
@@ -31,14 +44,30 @@ type AppState = {
   checkForEnvelopeAchievements: () => Promise<void>;
 };
 
-function initialState(theme: Settings['theme']): Omit<AppState, 'addTransaction' | 'addEnvelope' | 'addAccount' | 'toggleChallengeKey' | 'loadAchievements' | 'loadUserAchievements' | 'loadRewards' | 'loadNotifications' | 'updateAchievementProgress' | 'claimReward' | 'checkAndUpdateStreak' | 'initializeGamification'> {
+function initialState(
+  theme: Settings['theme'],
+): Omit<
+  AppState,
+  | 'addTransaction'
+  | 'addEnvelope'
+  | 'addAccount'
+  | 'toggleChallengeKey'
+  | 'loadAchievements'
+  | 'loadUserAchievements'
+  | 'loadRewards'
+  | 'loadNotifications'
+  | 'updateAchievementProgress'
+  | 'claimReward'
+  | 'checkAndUpdateStreak'
+  | 'initializeGamification'
+> {
   const now = new Date();
   const iso = (d: Date) => d.toISOString();
   return {
     settings: {
       id: 'settings-1',
       base_currency: 'USD',
-      is_pro: false,
+      is_pro: true,
       passcode_enabled: false,
       theme,
       language: 'en',
@@ -73,11 +102,21 @@ export const useAppStore = create<AppState>((set, get) => ({
             // @ts-ignore
             if (typeof p.is_pro === 'boolean') m.is_pro = p.is_pro;
             // @ts-ignore
-            if (typeof p.passcode_enabled === 'boolean') m.passcode_enabled = p.passcode_enabled;
+            if (typeof p.passcode_enabled === 'boolean')
+              m.passcode_enabled = p.passcode_enabled;
             // @ts-ignore
             if (p.theme) m.theme = p.theme;
             // @ts-ignore
-            if (p.language) (m as any).language = p.language;
+            if (p.language) m.language = p.language;
+            // @ts-ignore
+            if (typeof p.notifications_enabled === 'boolean')
+              m.notifications_enabled = p.notifications_enabled;
+            // @ts-ignore
+            if (typeof p.sound_enabled === 'boolean')
+              m.sound_enabled = p.sound_enabled;
+            // @ts-ignore
+            if (typeof p.haptics_enabled === 'boolean')
+              m.haptics_enabled = p.haptics_enabled;
           });
         }
       });
@@ -114,7 +153,9 @@ export const useAppStore = create<AppState>((set, get) => ({
           // @ts-ignore
           model.transfer_to_account_id = t.transfer_to_account_id ?? null;
           // @ts-ignore
-          model.attachments = t.attachments ? JSON.stringify(t.attachments) : null;
+          model.attachments = t.attachments
+            ? JSON.stringify(t.attachments)
+            : null;
         });
       });
 
@@ -172,7 +213,9 @@ export const useAppStore = create<AppState>((set, get) => ({
   toggleChallengeKey: async (id, key) => {
     set(state => ({
       savings_challenges: state.savings_challenges.map(c =>
-        c.id === id ? { ...c, progress: { ...c.progress, [key]: !c.progress[key] } } : c,
+        c.id === id
+          ? { ...c, progress: { ...c.progress, [key]: !c.progress[key] } }
+          : c,
       ),
     }));
     try {
@@ -196,7 +239,7 @@ export const useAppStore = create<AppState>((set, get) => ({
     await get().loadAchievements();
     await get().loadUserAchievements();
     await get().loadRewards();
-    
+
     // Check for existing achievements that might have been missed
     await get().checkForTransactionAchievements();
     await get().checkForEnvelopeAchievements();
@@ -209,32 +252,38 @@ export const useAppStore = create<AppState>((set, get) => ({
       const db = getDatabase();
       const transactions = await db.get('transactions').query().fetch();
       const envelopes = await db.get('envelopes').query().fetch();
-      
+
       console.log('Current transactions count:', transactions.length);
       console.log('Current envelopes count:', envelopes.length);
-      
+
       // Check first transaction achievement
       if (transactions.length === 1) {
         console.log('Unlocking first_transaction achievement!');
         await get().updateAchievementProgress('first_transaction', 1);
       }
-      
+
       // Check budget master achievement (5 envelopes)
       if (envelopes.length >= 5) {
         console.log('Unlocking budget_master achievement!');
-        await get().updateAchievementProgress('budget_master', envelopes.length);
+        await get().updateAchievementProgress(
+          'budget_master',
+          envelopes.length,
+        );
       }
-      
+
       // Check wealth builder achievement (total savings)
       const totalSavings = transactions
         .filter(tx => tx.type === 'income')
         .reduce((sum, tx) => sum + Math.abs(tx.amount), 0);
-      
+
       console.log('Total savings:', totalSavings);
-      
+
       if (totalSavings >= 1000) {
         console.log('Unlocking wealth_builder achievement!');
-        await get().updateAchievementProgress('wealth_builder', Math.floor(totalSavings / 100));
+        await get().updateAchievementProgress(
+          'wealth_builder',
+          Math.floor(totalSavings / 100),
+        );
       }
     } catch (error) {
       console.error('Error checking transaction achievements:', error);
@@ -245,10 +294,13 @@ export const useAppStore = create<AppState>((set, get) => ({
     try {
       const db = getDatabase();
       const envelopes = await db.get('envelopes').query().fetch();
-      
+
       // Check budget master achievement (5 envelopes)
       if (envelopes.length >= 5) {
-        await get().updateAchievementProgress('budget_master', envelopes.length);
+        await get().updateAchievementProgress(
+          'budget_master',
+          envelopes.length,
+        );
       }
     } catch (error) {
       console.error('Error checking envelope achievements:', error);
@@ -276,18 +328,20 @@ export const useAppStore = create<AppState>((set, get) => ({
   },
 
   updateAchievementProgress: async (achievementKey, progress) => {
-    console.log(`Updating achievement progress: ${achievementKey} = ${progress}`);
+    console.log(
+      `Updating achievement progress: ${achievementKey} = ${progress}`,
+    );
     await gamificationService.updateProgress(achievementKey, progress);
     await get().loadUserAchievements();
     await get().loadNotifications();
     console.log('Achievement progress updated successfully');
   },
 
-  claimReward: async (rewardId) => {
+  claimReward: async rewardId => {
     set(state => ({
       rewards: state.rewards.map(r =>
-        r.id === rewardId ? { ...r, claimed: true } : r
-      )
+        r.id === rewardId ? { ...r, claimed: true } : r,
+      ),
     }));
 
     // Update total score in settings

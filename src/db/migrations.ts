@@ -1,4 +1,8 @@
-import { schemaMigrations, addColumns, createTable } from '@nozbe/watermelondb/Schema/migrations';
+import {
+  schemaMigrations,
+  addColumns,
+  createTable,
+} from '@nozbe/watermelondb/Schema/migrations';
 
 export const migrations = schemaMigrations({
   migrations: [
@@ -7,9 +11,7 @@ export const migrations = schemaMigrations({
       steps: [
         addColumns({
           table: 'transactions',
-          columns: [
-            { name: 'attachments', type: 'string', isOptional: true },
-          ],
+          columns: [{ name: 'attachments', type: 'string', isOptional: true }],
         }),
       ],
     },
@@ -18,9 +20,7 @@ export const migrations = schemaMigrations({
       steps: [
         addColumns({
           table: 'settings',
-          columns: [
-            { name: 'language', type: 'string', isOptional: true },
-          ],
+          columns: [{ name: 'language', type: 'string', isOptional: true }],
         }),
       ],
     },
@@ -33,7 +33,11 @@ export const migrations = schemaMigrations({
             { name: 'last_app_open', type: 'number', isOptional: true },
             { name: 'streak_days', type: 'number', isOptional: true },
             { name: 'total_score', type: 'number', isOptional: true },
-            { name: 'notifications_enabled', type: 'boolean', isOptional: true },
+            {
+              name: 'notifications_enabled',
+              type: 'boolean',
+              isOptional: true,
+            },
           ],
         }),
         createTable({
@@ -81,6 +85,18 @@ export const migrations = schemaMigrations({
             { name: 'scheduled_for', type: 'number' },
             { name: 'delivered', type: 'boolean' },
             { name: 'data', type: 'string', isOptional: true },
+          ],
+        }),
+      ],
+    },
+    {
+      toVersion: 5,
+      steps: [
+        addColumns({
+          table: 'settings',
+          columns: [
+            { name: 'sound_enabled', type: 'boolean', isOptional: true },
+            { name: 'haptics_enabled', type: 'boolean', isOptional: true },
           ],
         }),
       ],

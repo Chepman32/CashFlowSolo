@@ -1,5 +1,11 @@
 import React, { useEffect, useState } from 'react';
-import { StatusBar, StyleSheet, View, ActivityIndicator, Text } from 'react-native';
+import {
+  StatusBar,
+  StyleSheet,
+  View,
+  ActivityIndicator,
+  Text,
+} from 'react-native';
 import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
 import AppTabs from './src/navigation/AppTabs';
 import { hydrateFromDB, seedIfEmpty } from './src/store/persistence';
@@ -15,8 +21,16 @@ function InnerApp() {
   const setHydrated = useAppStore.setState;
   const accounts = useAppStore(s => s.accounts);
   const envelopes = useAppStore(s => s.envelopes);
+  const language = useAppStore(s => s.settings.language);
   const initializeGamification = useAppStore(s => s.initializeGamification);
   const checkAndUpdateStreak = useAppStore(s => s.checkAndUpdateStreak);
+
+  // Sync i18n language with store
+  useEffect(() => {
+    if (language && i18n.language !== language) {
+      i18n.changeLanguage(language);
+    }
+  }, [language]);
 
   useEffect(() => {
     (async () => {
@@ -24,6 +38,11 @@ function InnerApp() {
         await seedIfEmpty();
         const data = await hydrateFromDB();
         if (data.settings) {
+          // Change language BEFORE updating state to avoid flash of wrong language
+          if (data.settings.language && data.settings.language !== 'en') {
+            await i18n.changeLanguage(data.settings.language);
+          }
+
           setHydrated({
             settings: data.settings,
             accounts: data.accounts,
@@ -31,9 +50,6 @@ function InnerApp() {
             transactions: data.transactions,
             savings_challenges: data.savings_challenges,
           });
-          if ((data.settings as any).language) {
-            try { i18n.changeLanguage((data.settings as any).language); } catch {}
-          }
         }
 
         // Initialize gamification system
@@ -43,7 +59,6 @@ function InnerApp() {
         } catch (gamificationError) {
           console.error('Error initializing gamification:', gamificationError);
         }
-
       } catch (e) {
         // noop: falls back to in-memory defaults
       } finally {
@@ -59,19 +74,27 @@ function InnerApp() {
         backgroundColor={palette.background}
       />
       <SafeAreaView
-        style={[
-          styles.container,
-          { backgroundColor: palette.background },
-        ]}
+        style={[styles.container, { backgroundColor: palette.background }]}
         edges={['top']}
       >
         {!booted ? (
-          <View style={[styles.container, { alignItems: 'center', justifyContent: 'center' }]}> 
+          <View
+            style={[
+              styles.container,
+              { alignItems: 'center', justifyContent: 'center' },
+            ]}
+          >
             <ActivityIndicator />
-            <Text style={{ marginTop: 8, color: palette.textSecondary }}>Preparing your data…</Text>
+            <Text style={{ marginTop: 8, color: palette.textSecondary }}>
+              Preparing your data…
+            </Text>
           </View>
         ) : accounts.length === 0 || envelopes.length === 0 ? (
-          <Onboarding onDone={() => { /* after onboarding, state updates trigger tabs */ }} />
+          <Onboarding
+            onDone={() => {
+              /* after onboarding, state updates trigger tabs */
+            }}
+          />
         ) : (
           <View style={styles.container}>
             <AppTabs />

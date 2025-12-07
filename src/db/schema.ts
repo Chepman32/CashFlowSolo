@@ -1,7 +1,7 @@
 import { appSchema, tableSchema } from '@nozbe/watermelondb';
 
 export const schema = appSchema({
-  version: 4,
+  version: 5,
   tables: [
     tableSchema({
       name: 'settings',
@@ -15,6 +15,8 @@ export const schema = appSchema({
         { name: 'streak_days', type: 'number', isOptional: true },
         { name: 'total_score', type: 'number', isOptional: true },
         { name: 'notifications_enabled', type: 'boolean', isOptional: true },
+        { name: 'sound_enabled', type: 'boolean', isOptional: true },
+        { name: 'haptics_enabled', type: 'boolean', isOptional: true },
       ],
     }),
     tableSchema({
@@ -47,7 +49,12 @@ export const schema = appSchema({
         { name: 'exchange_rate_to_base', type: 'number' },
         { name: 'date', type: 'number', isIndexed: true },
         { name: 'created_at', type: 'number' },
-        { name: 'envelope_id', type: 'string', isOptional: true, isIndexed: true },
+        {
+          name: 'envelope_id',
+          type: 'string',
+          isOptional: true,
+          isIndexed: true,
+        },
         { name: 'account_id', type: 'string', isIndexed: true },
         { name: 'transfer_to_account_id', type: 'string', isOptional: true },
         { name: 'attachments', type: 'string', isOptional: true },

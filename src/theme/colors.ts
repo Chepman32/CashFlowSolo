@@ -15,6 +15,22 @@ export const colors = {
     textSecondary: '#9CA3AF',
     border: '#2A2A2A',
   },
+  solar: {
+    primary: '#D97706',
+    background: '#FFFBEB',
+    surface: '#FEF3C7',
+    textPrimary: '#78350F',
+    textSecondary: '#92400E',
+    border: '#FDE68A',
+  },
+  mono: {
+    primary: '#6B7280',
+    background: '#F3F4F6',
+    surface: '#E5E7EB',
+    textPrimary: '#1F2937',
+    textSecondary: '#4B5563',
+    border: '#D1D5DB',
+  },
   accents: [
     '#EF4444',
     '#3B82F6',
