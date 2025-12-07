@@ -900,26 +900,62 @@ async function pickFiles(imagesOnly = false, t?: (key: string) => string) {
       copyTo: 'cachesDirectory',
     };
     const res: any[] = await DocumentPicker.pickMultiple(opts);
-    return res.map((r: any) => ({
-      id: `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
-      name: r.name ?? (t ? t('attachments.attachment') : 'Attachment'),
-      uri: r.fileCopyUri ?? r.uri,
-      mime: r.type ?? null,
-      size: r.size ?? null,
-    }));
+    return res.map((r: any) => {
+      // Extract filename from URI if name is not provided
+      // Try multiple possible property names for the filename
+      let fileName = r.name || r.fileName || r.displayName;
+      if (!fileName) {
+        // Try to extract from fileCopyUri first (more reliable)
+        const uri = r.fileCopyUri || r.uri || '';
+        if (uri) {
+          const decoded = decodeURIComponent(uri);
+          const parts = decoded.split('/');
+          fileName = parts[parts.length - 1];
+          // Remove any query params
+          if (fileName.includes('?')) {
+            fileName = fileName.split('?')[0];
+          }
+        }
+      }
+      return {
+        id: `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+        name: fileName || (t ? t('attachments.attachment') : 'Attachment'),
+        uri: r.fileCopyUri ?? r.uri,
+        mime: r.type ?? null,
+        size: r.size ?? null,
+      };
+    });
   } catch (err: any) {
     if (isCancelFn && isCancelFn(err)) return [] as Attachment[];
     // Fallback to single-picker if multi not supported in some environments
     try {
-      const r: any = await DocumentPicker.pick({
+      const result: any = await DocumentPicker.pick({
         type: imagesOnly
           ? pickerTypes?.images || pickerTypes?.image
           : pickerTypes?.allFiles,
         copyTo: 'cachesDirectory',
       });
+      // DocumentPicker.pick may return array or single object depending on version
+      const r = Array.isArray(result) ? result[0] : result;
+      // Extract filename from URI if name is not provided
+      // Try multiple possible property names for the filename
+      let fileName = r.name || r.fileName || r.displayName;
+      if (!fileName) {
+        // Try to extract from fileCopyUri first (more reliable)
+        const uri = r.fileCopyUri || r.uri || '';
+        if (uri) {
+          const decoded = decodeURIComponent(uri);
+          const parts = decoded.split('/');
+          fileName = parts[parts.length - 1];
+          // Remove any query params
+          if (fileName.includes('?')) {
+            fileName = fileName.split('?')[0];
+          }
+        }
+      }
       const item: Attachment = {
         id: `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
-        name: r.name ?? (t ? t('attachments.attachment') : 'Attachment'),
+        name: fileName || (t ? t('attachments.attachment') : 'Attachment'),
         uri: r.fileCopyUri ?? r.uri,
         mime: r.type ?? null,
         size: r.size ?? null,
