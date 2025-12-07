@@ -1,4 +1,14 @@
-export type CurrencyCode = 'USD' | 'EUR' | 'GBP';
+export type CurrencyCode =
+  | 'USD'
+  | 'EUR'
+  | 'GBP'
+  | 'JPY'
+  | 'SGD'
+  | 'CNY'
+  | 'AUD'
+  | 'CHF'
+  | 'HKD'
+  | 'CAD';
 
 export type ThemeMode = 'light' | 'dark' | 'solar' | 'mono' | 'system';
 
@@ -73,7 +83,13 @@ export interface Achievement {
   name: string;
   description: string;
   icon: string;
-  category: 'streak' | 'transactions' | 'challenges' | 'budgeting' | 'social' | 'special';
+  category:
+    | 'streak'
+    | 'transactions'
+    | 'challenges'
+    | 'budgeting'
+    | 'social'
+    | 'special';
   max_progress: number;
   points: number;
   is_secret: boolean;
@@ -96,7 +112,12 @@ export interface UserAchievement {
   achievement?: Achievement;
 }
 
-export type RewardType = 'bonus_points' | 'streak_bonus' | 'special_unlock' | 'theme_unlock' | 'feature_unlock';
+export type RewardType =
+  | 'bonus_points'
+  | 'streak_bonus'
+  | 'special_unlock'
+  | 'theme_unlock'
+  | 'feature_unlock';
 
 export interface Reward {
   id: string;
@@ -110,7 +131,12 @@ export interface Reward {
   created_at: string; // ISO date
 }
 
-export type NotificationType = 'streak_reminder' | 'achievement_unlock' | 'reward_available' | 'daily_login_bonus' | 'weekly_summary';
+export type NotificationType =
+  | 'streak_reminder'
+  | 'achievement_unlock'
+  | 'reward_available'
+  | 'daily_login_bonus'
+  | 'weekly_summary';
 
 export interface AppNotification {
   id: string;

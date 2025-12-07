@@ -1,4 +1,14 @@
-export type CurrencyCode = 'USD' | 'EUR' | 'GBP';
+export type CurrencyCode =
+  | 'USD'
+  | 'EUR'
+  | 'GBP'
+  | 'JPY'
+  | 'SGD'
+  | 'CNY'
+  | 'AUD'
+  | 'CHF'
+  | 'HKD'
+  | 'CAD';
 
 export interface CurrencyInfo {
   code: CurrencyCode;
@@ -41,14 +51,63 @@ export const CURRENCIES: Record<CurrencyCode, CurrencyInfo> = {
     name: 'British Pound',
     flag: '🇬🇧',
   },
+  JPY: {
+    code: 'JPY',
+    symbol: '¥',
+    name: 'Japanese Yen',
+    flag: '🇯🇵',
+  },
+  SGD: {
+    code: 'SGD',
+    symbol: 'S$',
+    name: 'Singapore Dollar',
+    flag: '🇸🇬',
+  },
+  CNY: {
+    code: 'CNY',
+    symbol: '¥',
+    name: 'Chinese Yuan',
+    flag: '🇨🇳',
+  },
+  AUD: {
+    code: 'AUD',
+    symbol: 'A$',
+    name: 'Australian Dollar',
+    flag: '🇦🇺',
+  },
+  CHF: {
+    code: 'CHF',
+    symbol: 'Fr',
+    name: 'Swiss Franc',
+    flag: '🇨🇭',
+  },
+  HKD: {
+    code: 'HKD',
+    symbol: 'HK$',
+    name: 'Hong Kong Dollar',
+    flag: '🇭🇰',
+  },
+  CAD: {
+    code: 'CAD',
+    symbol: 'C$',
+    name: 'Canadian Dollar',
+    flag: '🇨🇦',
+  },
 };
 
 // Mock exchange rates (in a real app, these would come from an API)
 // Rates are relative to USD as base
 const EXCHANGE_RATES: Record<CurrencyCode, number> = {
   USD: 1.0,
-  EUR: 0.85, // 1 USD = 0.85 EUR
-  GBP: 0.73, // 1 USD = 0.73 GBP
+  EUR: 0.92,
+  GBP: 0.79,
+  JPY: 149.5,
+  SGD: 1.34,
+  CNY: 7.24,
+  AUD: 1.53,
+  CHF: 0.88,
+  HKD: 7.82,
+  CAD: 1.36,
 };
 
 export class CurrencyService {
@@ -102,7 +161,10 @@ export class CurrencyService {
     return CURRENCIES[code];
   }
 
-  getLocalizedCurrencyInfo(code: CurrencyCode, t: (key: string) => string): LocalizedCurrencyInfo {
+  getLocalizedCurrencyInfo(
+    code: CurrencyCode,
+    t: (key: string) => string,
+  ): LocalizedCurrencyInfo {
     const baseInfo = CURRENCIES[code];
     return {
       ...baseInfo,
@@ -113,11 +175,11 @@ export class CurrencyService {
   formatCurrency(amount: number, currency: CurrencyCode): string {
     const info = this.getCurrencyInfo(currency);
     const symbol = info.symbol;
-    
+
     // Format with appropriate decimal places
     const formattedAmount = Math.abs(amount).toFixed(2);
     const sign = amount < 0 ? '-' : '';
-    
+
     return `${sign}${symbol}${formattedAmount}`;
   }
 
@@ -125,13 +187,13 @@ export class CurrencyService {
   async updateExchangeRates(): Promise<void> {
     // Simulate API call delay
     await new Promise<void>(resolve => setTimeout(() => resolve(), 100));
-    
+
     // For demo purposes, we'll just use the static rates
     // In a real app, you'd fetch current rates from a service like:
     // - https://exchangeratesapi.io/
     // - https://fixer.io/
     // - https://currencylayer.com/
-    
+
     console.log('Exchange rates updated');
   }
 }
