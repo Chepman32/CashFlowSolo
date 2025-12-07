@@ -7,6 +7,8 @@ import {
   Modal,
   Pressable,
   ScrollView,
+  Image,
+  ImageSourcePropType,
 } from 'react-native';
 import { colors } from '../theme/colors';
 import { useAppStore } from '../store/useAppStore';
@@ -17,6 +19,39 @@ import currencyService, {
   type CurrencyCode,
 } from '../services/currencyService';
 import type { ThemeMode } from '../types';
+
+const FLAGS: Record<string, ImageSourcePropType> = {
+  en: require('../assets/flags/en.png'),
+  zh: require('../assets/flags/zh.png'),
+  ja: require('../assets/flags/ja.png'),
+  ko: require('../assets/flags/ko.png'),
+  de: require('../assets/flags/de.png'),
+  fr: require('../assets/flags/fr.png'),
+  es: require('../assets/flags/es.png'),
+  pt: require('../assets/flags/pt-BR.png'),
+  ar: require('../assets/flags/ar.png'),
+  ru: require('../assets/flags/ru.png'),
+  it: require('../assets/flags/it.png'),
+  nl: require('../assets/flags/nl.png'),
+  tr: require('../assets/flags/tr.png'),
+  th: require('../assets/flags/th.png'),
+  vi: require('../assets/flags/vi.png'),
+  id: require('../assets/flags/id.png'),
+  pl: require('../assets/flags/pl.png'),
+  uk: require('../assets/flags/uk.png'),
+  hi: require('../assets/flags/hi.png'),
+  he: require('../assets/flags/he.png'),
+  sv: require('../assets/flags/sv.png'),
+  no: require('../assets/flags/no.png'),
+  da: require('../assets/flags/da.png'),
+  fi: require('../assets/flags/fi.png'),
+  cs: require('../assets/flags/cs.png'),
+  hu: require('../assets/flags/hu.png'),
+  ro: require('../assets/flags/ro.png'),
+  el: require('../assets/flags/el.png'),
+  ms: require('../assets/flags/ms.png'),
+  fil: require('../assets/flags/fil.png'),
+};
 
 const LANGUAGES = [
   { code: 'en', label: 'English', native: 'English' },
@@ -172,6 +207,13 @@ export default function Settings() {
             {t('settings.language')}
           </Text>
           <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+            {FLAGS[currentLanguage.code] && (
+              <Image
+                source={FLAGS[currentLanguage.code]}
+                style={styles.flagIcon}
+                resizeMode="cover"
+              />
+            )}
             <Text style={{ color: theme.textSecondary, marginRight: 8 }}>
               {currentLanguage.native}
             </Text>
@@ -214,30 +256,39 @@ export default function Settings() {
                   },
                 ]}
               >
-                <View>
-                  <Text
-                    style={{
-                      color:
-                        settings.language === lang.code
-                          ? 'white'
-                          : theme.textPrimary,
-                      fontWeight: '600',
-                      fontSize: 15,
-                    }}
-                  >
-                    {lang.native}
-                  </Text>
-                  <Text
-                    style={{
-                      color:
-                        settings.language === lang.code
-                          ? 'rgba(255,255,255,0.8)'
-                          : theme.textSecondary,
-                      fontSize: 13,
-                    }}
-                  >
-                    {lang.label}
-                  </Text>
+                <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                  {FLAGS[lang.code] && (
+                    <Image
+                      source={FLAGS[lang.code]}
+                      style={styles.flagIconLarge}
+                      resizeMode="cover"
+                    />
+                  )}
+                  <View>
+                    <Text
+                      style={{
+                        color:
+                          settings.language === lang.code
+                            ? 'white'
+                            : theme.textPrimary,
+                        fontWeight: '600',
+                        fontSize: 15,
+                      }}
+                    >
+                      {lang.native}
+                    </Text>
+                    <Text
+                      style={{
+                        color:
+                          settings.language === lang.code
+                            ? 'rgba(255,255,255,0.8)'
+                            : theme.textSecondary,
+                        fontSize: 13,
+                      }}
+                    >
+                      {lang.label}
+                    </Text>
+                  </View>
                 </View>
                 {settings.language === lang.code && (
                   <Text style={{ color: 'white', fontSize: 18 }}>
@@ -442,5 +493,17 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
     paddingHorizontal: 16,
     borderBottomWidth: StyleSheet.hairlineWidth,
+  },
+  flagIcon: {
+    width: 20,
+    height: 20,
+    marginRight: 8,
+    borderRadius: 10,
+  },
+  flagIconLarge: {
+    width: 28,
+    height: 28,
+    marginRight: 12,
+    borderRadius: 14,
   },
 });
