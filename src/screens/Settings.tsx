@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   View,
   Text,
@@ -9,7 +9,16 @@ import {
   ScrollView,
   Image,
   ImageSourcePropType,
+  Alert,
+  Linking,
+  Platform,
 } from 'react-native';
+import Animated, {
+  useAnimatedStyle,
+  useSharedValue,
+  withTiming,
+  Easing,
+} from 'react-native-reanimated';
 import { colors } from '../theme/colors';
 import { useAppStore } from '../store/useAppStore';
 import { useAppTheme } from '../theme/ThemeProvider';
@@ -94,13 +103,70 @@ const THEMES: { mode: ThemeMode; labelKey: string }[] = [
   { mode: 'mono', labelKey: 'theme.mono' },
 ];
 
+const ACCORDION_HEIGHT = LANGUAGES.length * 60; // Approximate height per language item
+
 export default function Settings() {
   const { colors: theme } = useAppTheme();
   const settings = useAppStore(s => s.settings);
   const [showCurrencyPicker, setShowCurrencyPicker] = useState(false);
   const [languageExpanded, setLanguageExpanded] = useState(false);
+  const [notificationsEnabled, setNotificationsEnabled] = useState(false);
   const updateSettings = useAppStore(s => s.updateSettings);
   const { t, i18n } = useTranslation();
+
+  // Check notification permission status on mount
+  const checkNotificationPermission = async () => {
+    try {
+      const notifee = require('@notifee/react-native').default;
+      const notifSettings = await notifee.getNotificationSettings();
+      // AuthorizationStatus: -1 = NOT_DETERMINED, 0 = DENIED, 1 = AUTHORIZED, 2 = PROVISIONAL
+      const isAuthorized =
+        notifSettings.authorizationStatus === 1 ||
+        notifSettings.authorizationStatus === 2;
+      setNotificationsEnabled(isAuthorized);
+      return notifSettings.authorizationStatus;
+    } catch (error) {
+      console.error('Error checking notification permission:', error);
+      return -1;
+    }
+  };
+
+  useEffect(() => {
+    checkNotificationPermission();
+  }, []);
+
+  // Animation for accordion
+  const accordionHeight = useSharedValue(0);
+  const accordionOpacity = useSharedValue(0);
+  const arrowRotation = useSharedValue(0);
+
+  useEffect(() => {
+    accordionHeight.value = withTiming(
+      languageExpanded ? ACCORDION_HEIGHT : 0,
+      {
+        duration: 300,
+        easing: Easing.bezier(0.25, 0.1, 0.25, 1),
+      },
+    );
+    accordionOpacity.value = withTiming(languageExpanded ? 1 : 0, {
+      duration: 200,
+    });
+    arrowRotation.value = withTiming(languageExpanded ? 180 : 0, {
+      duration: 300,
+      easing: Easing.bezier(0.25, 0.1, 0.25, 1),
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [languageExpanded]);
+
+  const accordionAnimStyle = useAnimatedStyle(() => ({
+    maxHeight: accordionHeight.value,
+    opacity: accordionOpacity.value,
+    overflow: 'hidden',
+  }));
+
+  const arrowAnimStyle = useAnimatedStyle(() => ({
+    transform: [{ rotate: `${arrowRotation.value}deg` }],
+  }));
 
   const currentLanguage =
     LANGUAGES.find(l => l.code === settings.language) || LANGUAGES[0];
@@ -217,88 +283,84 @@ export default function Settings() {
             <Text style={{ color: theme.textSecondary, marginRight: 8 }}>
               {currentLanguage.native}
             </Text>
-            <Text
-              style={{
-                color: theme.textSecondary,
-                transform: [{ rotate: languageExpanded ? '180deg' : '0deg' }],
-              }}
+            <Animated.Text
+              style={[{ color: theme.textSecondary }, arrowAnimStyle]}
             >
               {t('symbols.dropdown')}
-            </Text>
+            </Animated.Text>
           </View>
         </Pressable>
 
-        {languageExpanded && (
-          <View
-            style={[
-              styles.accordionContent,
-              { backgroundColor: theme.surface, borderColor: theme.border },
-            ]}
-          >
-            {LANGUAGES.map(lang => (
-              <Pressable
-                key={lang.code}
-                onPress={async () => {
-                  // Change i18n language first for immediate UI update
-                  await i18n.changeLanguage(lang.code);
-                  // Then persist to store/database
-                  await updateSettings({ language: lang.code });
-                  setLanguageExpanded(false);
-                }}
-                style={[
-                  styles.languageOption,
-                  {
-                    borderColor: theme.border,
-                    backgroundColor:
-                      settings.language === lang.code
-                        ? colors.light.primary
-                        : 'transparent',
-                  },
-                ]}
-              >
-                <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                  {FLAGS[lang.code] && (
-                    <Image
-                      source={FLAGS[lang.code]}
-                      style={styles.flagIconLarge}
-                      resizeMode="cover"
-                    />
-                  )}
-                  <View>
-                    <Text
-                      style={{
-                        color:
-                          settings.language === lang.code
-                            ? 'white'
-                            : theme.textPrimary,
-                        fontWeight: '600',
-                        fontSize: 15,
-                      }}
-                    >
-                      {lang.native}
-                    </Text>
-                    <Text
-                      style={{
-                        color:
-                          settings.language === lang.code
-                            ? 'rgba(255,255,255,0.8)'
-                            : theme.textSecondary,
-                        fontSize: 13,
-                      }}
-                    >
-                      {lang.label}
-                    </Text>
-                  </View>
-                </View>
-                {settings.language === lang.code && (
-                  <Text style={{ color: 'white', fontSize: 18 }}>
-                    {t('symbols.checkmark')}
-                  </Text>
+        <Animated.View
+          style={[
+            styles.accordionContent,
+            { backgroundColor: theme.surface, borderColor: theme.border },
+            accordionAnimStyle,
+          ]}
+        >
+          {LANGUAGES.map(lang => (
+            <Pressable
+              key={lang.code}
+              onPress={async () => {
+                // Change i18n language first for immediate UI update
+                await i18n.changeLanguage(lang.code);
+                // Then persist to store/database
+                await updateSettings({ language: lang.code });
+                setLanguageExpanded(false);
+              }}
+              style={[
+                styles.languageOption,
+                {
+                  borderColor: theme.border,
+                  backgroundColor:
+                    settings.language === lang.code
+                      ? colors.light.primary
+                      : 'transparent',
+                },
+              ]}
+            >
+              <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                {FLAGS[lang.code] && (
+                  <Image
+                    source={FLAGS[lang.code]}
+                    style={styles.flagIconLarge}
+                    resizeMode="cover"
+                  />
                 )}
-              </Pressable>
-            ))}
-          </View>
-        )}
+                <View>
+                  <Text
+                    style={{
+                      color:
+                        settings.language === lang.code
+                          ? 'white'
+                          : theme.textPrimary,
+                      fontWeight: '600',
+                      fontSize: 15,
+                    }}
+                  >
+                    {lang.native}
+                  </Text>
+                  <Text
+                    style={{
+                      color:
+                        settings.language === lang.code
+                          ? 'rgba(255,255,255,0.8)'
+                          : theme.textSecondary,
+                      fontSize: 13,
+                    }}
+                  >
+                    {lang.label}
+                  </Text>
+                </View>
+              </View>
+              {settings.language === lang.code && (
+                <Text style={{ color: 'white', fontSize: 18 }}>
+                  {t('symbols.checkmark')}
+                </Text>
+              )}
+            </Pressable>
+          ))}
+        </Animated.View>
 
         {/* Currency Picker Modal */}
         <Modal
@@ -402,9 +464,89 @@ export default function Settings() {
             {t('settings.notifications')}
           </Text>
           <Switch
-            value={settings.notifications_enabled ?? true}
-            onValueChange={async value => {
-              await updateSettings({ notifications_enabled: value });
+            value={notificationsEnabled}
+            onValueChange={async () => {
+              try {
+                const notifee = require('@notifee/react-native').default;
+                const currentStatus = await checkNotificationPermission();
+
+                // AuthorizationStatus: -1 = NOT_DETERMINED, 0 = DENIED, 1 = AUTHORIZED, 2 = PROVISIONAL
+                if (currentStatus === -1) {
+                  // Not determined - request permission (shows system prompt)
+                  const newSettings = await notifee.requestPermission();
+                  const granted =
+                    newSettings.authorizationStatus === 1 ||
+                    newSettings.authorizationStatus === 2;
+                  setNotificationsEnabled(granted);
+
+                  if (!granted) {
+                    // Permission was denied
+                    Alert.alert(
+                      t('settings.notifications'),
+                      Platform.OS === 'ios'
+                        ? 'Notifications permission was denied. You can enable it in Settings.'
+                        : 'Notifications permission was denied. You can enable it in app settings.',
+                      [
+                        { text: 'OK', style: 'cancel' },
+                        {
+                          text: 'Open Settings',
+                          onPress: () => {
+                            if (Platform.OS === 'ios') {
+                              Linking.openURL('app-settings:');
+                            } else {
+                              Linking.openSettings();
+                            }
+                          },
+                        },
+                      ],
+                    );
+                  }
+                } else if (currentStatus === 0) {
+                  // Previously denied - must go to settings
+                  Alert.alert(
+                    t('settings.notifications'),
+                    Platform.OS === 'ios'
+                      ? 'Notifications are disabled. Please enable them in Settings.'
+                      : 'Notifications are disabled. Please enable them in app settings.',
+                    [
+                      { text: t('common.cancel'), style: 'cancel' },
+                      {
+                        text: 'Open Settings',
+                        onPress: () => {
+                          if (Platform.OS === 'ios') {
+                            Linking.openURL('app-settings:');
+                          } else {
+                            Linking.openSettings();
+                          }
+                        },
+                      },
+                    ],
+                  );
+                } else {
+                  // Already authorized - user wants to disable, must go to settings
+                  Alert.alert(
+                    t('settings.notifications'),
+                    Platform.OS === 'ios'
+                      ? 'To disable notifications, please go to Settings.'
+                      : 'To disable notifications, please go to app settings.',
+                    [
+                      { text: t('common.cancel'), style: 'cancel' },
+                      {
+                        text: 'Open Settings',
+                        onPress: () => {
+                          if (Platform.OS === 'ios') {
+                            Linking.openURL('app-settings:');
+                          } else {
+                            Linking.openSettings();
+                          }
+                        },
+                      },
+                    ],
+                  );
+                }
+              } catch (error) {
+                console.error('Error handling notification permission:', error);
+              }
             }}
           />
         </View>
@@ -505,5 +647,7 @@ const styles = StyleSheet.create({
     height: 28,
     marginRight: 12,
     borderRadius: 14,
+    borderColor: 'rgba(0, 0, 0, 0.4)',
+    borderWidth: 0.5,
   },
 });
