@@ -1,0 +1,1 @@
+budget,kuvert,pengar,utgifter,spårare,sparande,ekonomi,planerare,mål,skuld,inkomst

@@ -1,0 +1,1 @@
+buget,plic,bani,cheltuieli,tracker,economii,finanțe,planificator,obiective,datorii,venit

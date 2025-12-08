@@ -1,0 +1,1 @@
+budjetti,kirjekuori,raha,kulut,seuranta,säästöt,talous,suunnittelija,tavoitteet,velka,tulot
