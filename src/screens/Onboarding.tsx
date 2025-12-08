@@ -9,13 +9,22 @@ import {
   useColorScheme,
   NativeSyntheticEvent,
   NativeScrollEvent,
+  Image,
+  ImageSourcePropType,
 } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import { colors } from '../theme/colors';
 import { useAppStore } from '../store/useAppStore';
 import { CURRENCIES, type CurrencyCode } from '../services/currencyService';
 
-const { width } = Dimensions.get('window');
+const { width, height } = Dimensions.get('window');
+
+const onboardingImages = {
+  secure: require('../assets/images/onboarding/Secure.png'),
+  free: require('../assets/images/onboarding/Free.png'),
+  fast: require('../assets/images/onboarding/Fast.png'),
+  languages: require('../assets/images/onboarding/Languages.png'),
+};
 
 export default function Onboarding({ onDone }: { onDone: () => void }) {
   const { t } = useTranslation();
@@ -29,8 +38,10 @@ export default function Onboarding({ onDone }: { onDone: () => void }) {
   const addEnvelope = useAppStore(s => s.addEnvelope);
   const updateSettings = useAppStore(s => s.updateSettings);
 
+  const totalPages = 6;
+
   function next() {
-    const p = Math.min(3, page + 1);
+    const p = Math.min(totalPages - 1, page + 1);
     setPage(p);
     scrollRef.current?.scrollTo({ x: p * width, animated: true });
   }
@@ -44,7 +55,7 @@ export default function Onboarding({ onDone }: { onDone: () => void }) {
   function handleScroll(event: NativeSyntheticEvent<NativeScrollEvent>) {
     const offsetX = event.nativeEvent.contentOffset.x;
     const newPage = Math.round(offsetX / width);
-    if (newPage !== page && newPage >= 0 && newPage <= 3) {
+    if (newPage !== page && newPage >= 0 && newPage <= totalPages - 1) {
       setPage(newPage);
     }
   }
@@ -81,14 +92,10 @@ export default function Onboarding({ onDone }: { onDone: () => void }) {
         showsHorizontalScrollIndicator={false}
         onMomentumScrollEnd={handleScroll}
       >
-        <Page
-          title={t('onboarding.welcome')}
-          body={t('onboarding.welcomeBody')}
-        />
-        <Page
-          title={t('onboarding.envelopeMethod')}
-          body={t('onboarding.envelopeMethodBody')}
-        />
+        <VisualSlide image={onboardingImages.secure} />
+        <VisualSlide image={onboardingImages.free} />
+        <VisualSlide image={onboardingImages.fast} />
+        <VisualSlide image={onboardingImages.languages} />
         <CurrencyPage currency={currency} onSelect={setCurrency} />
         <Page
           title={t('onboarding.getStarted')}
@@ -106,7 +113,7 @@ export default function Onboarding({ onDone }: { onDone: () => void }) {
       </ScrollView>
 
       <View style={styles.dotsContainer}>
-        <Dots count={4} index={page} />
+        <Dots count={totalPages} index={page} />
       </View>
 
       <View style={styles.footer}>
@@ -122,7 +129,7 @@ export default function Onboarding({ onDone }: { onDone: () => void }) {
         ) : (
           <View style={styles.navButton} />
         )}
-        {page < 3 && (
+        {page < totalPages - 1 && (
           <Pressable
             onPress={next}
             style={[styles.navButton, { borderColor: theme.border }]}
@@ -132,8 +139,20 @@ export default function Onboarding({ onDone }: { onDone: () => void }) {
             </Text>
           </Pressable>
         )}
-        {page === 3 && <View style={styles.navButton} />}
+        {page === totalPages - 1 && <View style={styles.navButton} />}
       </View>
+    </View>
+  );
+}
+
+function VisualSlide({ image }: { image: ImageSourcePropType }) {
+  return (
+    <View style={[styles.visualSlide, { width }]}>
+      <Image
+        source={image}
+        style={styles.visualImage}
+        resizeMode="contain"
+      />
     </View>
   );
 }
@@ -238,6 +257,15 @@ function Dots({ count, index }: { count: number; index: number }) {
 
 const styles = StyleSheet.create({
   container: { flex: 1 },
+  visualSlide: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  visualImage: {
+    width: width,
+    height: height,
+  },
   page: { padding: 24, alignItems: 'center', justifyContent: 'center' },
   title: {
     fontSize: 28,
