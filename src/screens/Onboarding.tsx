@@ -16,6 +16,7 @@ import { useTranslation } from 'react-i18next';
 import { colors } from '../theme/colors';
 import { useAppStore } from '../store/useAppStore';
 import { CURRENCIES, type CurrencyCode } from '../services/currencyService';
+import { useDeviceOrientation } from '../utils/device';
 
 const { width, height } = Dimensions.get('window');
 
@@ -97,50 +98,20 @@ export default function Onboarding({ onDone }: { onDone: () => void }) {
         <VisualSlide image={onboardingImages.fast} />
         <VisualSlide image={onboardingImages.languages} />
         <CurrencyPage currency={currency} onSelect={setCurrency} />
-        <Page
-          title={t('onboarding.getStarted')}
-          body={t('onboarding.getStartedBody')}
-        >
-          <Pressable
-            onPress={finish}
-            style={[styles.button, { backgroundColor: colors.light.primary }]}
-          >
-            <Text style={{ color: 'white', fontWeight: '800' }}>
-              {t('onboarding.createBudget')}
-            </Text>
-          </Pressable>
-        </Page>
+        <GetStartedPage onFinish={finish} />
       </ScrollView>
 
       <View style={styles.dotsContainer}>
         <Dots count={totalPages} index={page} />
       </View>
 
-      <View style={styles.footer}>
-        {page > 0 ? (
-          <Pressable
-            onPress={back}
-            style={[styles.navButton, { borderColor: theme.border }]}
-          >
-            <Text style={{ color: theme.textPrimary, fontWeight: '700' }}>
-              {t('common.back')}
-            </Text>
-          </Pressable>
-        ) : (
-          <View style={styles.navButton} />
-        )}
-        {page < totalPages - 1 && (
-          <Pressable
-            onPress={next}
-            style={[styles.navButton, { borderColor: theme.border }]}
-          >
-            <Text style={{ color: theme.textPrimary, fontWeight: '700' }}>
-              {t('onboarding.next')}
-            </Text>
-          </Pressable>
-        )}
-        {page === totalPages - 1 && <View style={styles.navButton} />}
-      </View>
+      <Footer
+        page={page}
+        totalPages={totalPages}
+        onBack={back}
+        onNext={next}
+        theme={theme}
+      />
     </View>
   );
 }
@@ -148,11 +119,7 @@ export default function Onboarding({ onDone }: { onDone: () => void }) {
 function VisualSlide({ image }: { image: ImageSourcePropType }) {
   return (
     <View style={[styles.visualSlide, { width }]}>
-      <Image
-        source={image}
-        style={styles.visualImage}
-        resizeMode="contain"
-      />
+      <Image source={image} style={styles.visualImage} resizeMode="contain" />
     </View>
   );
 }
@@ -168,11 +135,28 @@ function Page({
 }) {
   const isDark = useColorScheme() === 'dark';
   const theme = isDark ? colors.dark : colors.light;
+  const { isTablet } = useDeviceOrientation();
   return (
     <View style={[styles.page, { width }]}>
-      <Text style={[styles.title, { color: theme.textPrimary }]}>{title}</Text>
-      <Text style={[styles.body, { color: theme.textSecondary }]}>{body}</Text>
-      <View style={{ marginTop: 16 }}>{children}</View>
+      <Text
+        style={[
+          styles.title,
+          { color: theme.textPrimary },
+          isTablet && styles.titleTablet,
+        ]}
+      >
+        {title}
+      </Text>
+      <Text
+        style={[
+          styles.body,
+          { color: theme.textSecondary },
+          isTablet && styles.bodyTablet,
+        ]}
+      >
+        {body}
+      </Text>
+      <View style={{ marginTop: isTablet ? 24 : 16 }}>{children}</View>
     </View>
   );
 }
@@ -187,15 +171,29 @@ function CurrencyPage({
   const { t } = useTranslation();
   const isDark = useColorScheme() === 'dark';
   const theme = isDark ? colors.dark : colors.light;
+  const { isTablet } = useDeviceOrientation();
+
   return (
     <View style={[styles.page, { width }]}>
-      <Text style={[styles.title, { color: theme.textPrimary }]}>
+      <Text
+        style={[
+          styles.title,
+          { color: theme.textPrimary },
+          isTablet && styles.titleTablet,
+        ]}
+      >
         {t('onboarding.baseCurrency')}
       </Text>
-      <Text style={[styles.body, { color: theme.textSecondary }]}>
+      <Text
+        style={[
+          styles.body,
+          { color: theme.textSecondary },
+          isTablet && styles.bodyTablet,
+        ]}
+      >
         {t('onboarding.baseCurrencyBody')}
       </Text>
-      <View style={{ marginTop: 16, gap: 8 }}>
+      <View style={{ marginTop: isTablet ? 24 : 16, gap: isTablet ? 12 : 8 }}>
         {Object.values(CURRENCIES).map(currencyInfo => {
           const localizedCurrency = {
             name: t(`currency.${currencyInfo.code.toLowerCase()}`),
@@ -203,28 +201,27 @@ function CurrencyPage({
             symbol: currencyInfo.symbol,
             flag: currencyInfo.flag,
           };
+          const isSelected = currency === currencyInfo.code;
           return (
             <Pressable
               key={currencyInfo.code}
               onPress={() => onSelect(currencyInfo.code)}
               style={[
                 styles.row,
+                isTablet && styles.rowTablet,
                 {
                   borderColor: theme.border,
-                  backgroundColor:
-                    currency === currencyInfo.code
-                      ? colors.light.primary
-                      : 'transparent',
+                  backgroundColor: isSelected
+                    ? colors.light.primary
+                    : 'transparent',
                 },
               ]}
             >
               <Text
                 style={{
-                  color:
-                    currency === currencyInfo.code
-                      ? 'white'
-                      : theme.textPrimary,
+                  color: isSelected ? 'white' : theme.textPrimary,
                   fontWeight: '700',
+                  fontSize: isTablet ? 18 : 14,
                 }}
               >
                 {currencyInfo.flag} {localizedCurrency.name}
@@ -237,20 +234,122 @@ function CurrencyPage({
   );
 }
 
-function Dots({ count, index }: { count: number; index: number }) {
+function GetStartedPage({ onFinish }: { onFinish: () => void }) {
+  const { t } = useTranslation();
+  const isDark = useColorScheme() === 'dark';
+  const theme = isDark ? colors.dark : colors.light;
+  const { isTablet } = useDeviceOrientation();
+
   return (
-    <View style={{ flexDirection: 'row', gap: 6 }}>
+    <View style={[styles.page, { width }]}>
+      <Text
+        style={[
+          styles.title,
+          { color: theme.textPrimary },
+          isTablet && styles.titleTablet,
+        ]}
+      >
+        {t('onboarding.getStarted')}
+      </Text>
+      <Text
+        style={[
+          styles.body,
+          { color: theme.textSecondary },
+          isTablet && styles.bodyTablet,
+        ]}
+      >
+        {t('onboarding.getStartedBody')}
+      </Text>
+      <View style={{ marginTop: isTablet ? 24 : 16 }}>
+        <Pressable
+          onPress={onFinish}
+          style={[
+            styles.button,
+            { backgroundColor: colors.light.primary },
+            isTablet && styles.buttonTablet,
+          ]}
+        >
+          <Text
+            style={{
+              color: 'white',
+              fontWeight: '800',
+              fontSize: isTablet ? 20 : 14,
+            }}
+          >
+            {t('onboarding.createBudget')}
+          </Text>
+        </Pressable>
+      </View>
+    </View>
+  );
+}
+
+function Dots({ count, index }: { count: number; index: number }) {
+  const { isTablet } = useDeviceOrientation();
+  const dotSize = isTablet ? 12 : 8;
+  return (
+    <View style={{ flexDirection: 'row', gap: isTablet ? 10 : 6 }}>
       {Array.from({ length: count }).map((_, i) => (
         <View
           key={i}
           style={{
-            width: 8,
-            height: 8,
-            borderRadius: 4,
+            width: dotSize,
+            height: dotSize,
+            borderRadius: dotSize / 2,
             backgroundColor: i === index ? colors.light.primary : '#CBD5E1',
           }}
         />
       ))}
+    </View>
+  );
+}
+
+function Footer({
+  page,
+  totalPages,
+  onBack,
+  onNext,
+  theme,
+}: {
+  page: number;
+  totalPages: number;
+  onBack: () => void;
+  onNext: () => void;
+  theme: { border: string; textPrimary: string };
+}) {
+  const { t } = useTranslation();
+  const { isTablet } = useDeviceOrientation();
+
+  const buttonStyle = [
+    styles.navButton,
+    { borderColor: theme.border },
+    isTablet && styles.navButtonTablet,
+  ];
+  const placeholderStyle = [
+    styles.navButtonPlaceholder,
+    isTablet && styles.navButtonPlaceholderTablet,
+  ];
+  const textStyle = {
+    color: theme.textPrimary,
+    fontWeight: '700' as const,
+    fontSize: isTablet ? 18 : 14,
+  };
+
+  return (
+    <View style={[styles.footer, isTablet && styles.footerTablet]}>
+      {page > 0 ? (
+        <Pressable onPress={onBack} style={buttonStyle}>
+          <Text style={textStyle}>{t('common.back')}</Text>
+        </Pressable>
+      ) : (
+        <View style={placeholderStyle} />
+      )}
+      {page < totalPages - 1 && (
+        <Pressable onPress={onNext} style={buttonStyle}>
+          <Text style={textStyle}>{t('onboarding.next')}</Text>
+        </Pressable>
+      )}
+      {page === totalPages - 1 && <View style={placeholderStyle} />}
     </View>
   );
 }
@@ -297,16 +396,51 @@ const styles = StyleSheet.create({
     borderWidth: StyleSheet.hairlineWidth,
     minWidth: 70,
   },
+  navButtonTablet: {
+    paddingHorizontal: 32,
+    paddingVertical: 16,
+    borderRadius: 16,
+    minWidth: 120,
+  },
+  navButtonPlaceholder: {
+    minWidth: 70,
+  },
+  navButtonPlaceholderTablet: {
+    minWidth: 120,
+  },
+  footerTablet: {
+    bottom: 40,
+    left: 40,
+    right: 40,
+  },
   row: {
     padding: 14,
     borderRadius: 12,
     borderWidth: StyleSheet.hairlineWidth,
     alignItems: 'center',
   },
+  rowTablet: {
+    padding: 20,
+    borderRadius: 16,
+    minWidth: 280,
+  },
+  titleTablet: {
+    fontSize: 36,
+    marginBottom: 12,
+  },
+  bodyTablet: {
+    fontSize: 20,
+  },
   button: {
     paddingHorizontal: 16,
     paddingVertical: 14,
     borderRadius: 12,
     alignItems: 'center',
+  },
+  buttonTablet: {
+    paddingHorizontal: 40,
+    paddingVertical: 20,
+    borderRadius: 16,
+    minWidth: 280,
   },
 });
