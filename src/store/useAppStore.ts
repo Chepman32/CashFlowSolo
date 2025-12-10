@@ -76,6 +76,7 @@ function initialState(
       streak_days: 0,
       total_score: 0,
       notifications_enabled: true,
+      default_budget: 500,
     },
     accounts: [],
     envelopes: [],
@@ -118,6 +119,9 @@ export const useAppStore = create<AppState>((set, get) => ({
             // @ts-ignore
             if (typeof p.haptics_enabled === 'boolean')
               m.haptics_enabled = p.haptics_enabled;
+            // @ts-ignore
+            if (typeof p.default_budget === 'number')
+              m.default_budget = p.default_budget;
           });
         }
       });

@@ -11,6 +11,7 @@ import {
   NativeScrollEvent,
   Image,
   ImageSourcePropType,
+  TextInput,
 } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import { colors } from '../theme/colors';
@@ -33,13 +34,14 @@ export default function Onboarding({ onDone }: { onDone: () => void }) {
   const theme = isDark ? colors.dark : colors.light;
   const [page, setPage] = useState(0);
   const [currency, setCurrency] = useState<CurrencyCode>('USD');
+  const [budgetThreshold, setBudgetThreshold] = useState(500);
   const scrollRef = useRef<ScrollView>(null);
 
   const addAccount = useAppStore(s => s.addAccount);
   const addEnvelope = useAppStore(s => s.addEnvelope);
   const updateSettings = useAppStore(s => s.updateSettings);
 
-  const totalPages = 6;
+  const totalPages = 7;
 
   function next() {
     const p = Math.min(totalPages - 1, page + 1);
@@ -63,7 +65,10 @@ export default function Onboarding({ onDone }: { onDone: () => void }) {
 
   async function finish() {
     const now = new Date().toISOString();
-    await updateSettings({ base_currency: currency });
+    await updateSettings({
+      base_currency: currency,
+      default_budget: budgetThreshold,
+    });
     await addAccount({
       id: `acc-${Date.now()}`,
       name: t('onboarding.defaultAccountName'),
@@ -76,7 +81,7 @@ export default function Onboarding({ onDone }: { onDone: () => void }) {
       name: t('onboarding.defaultEnvelopeName'),
       icon: '🛒',
       color: colors.accents[0],
-      budgeted_amount: 500,
+      budgeted_amount: budgetThreshold,
       budget_interval: 'monthly',
       created_at: now,
     });
@@ -98,6 +103,11 @@ export default function Onboarding({ onDone }: { onDone: () => void }) {
         <VisualSlide image={onboardingImages.fast} />
         <VisualSlide image={onboardingImages.languages} />
         <CurrencyPage currency={currency} onSelect={setCurrency} />
+        <BudgetThresholdPage
+          budget={budgetThreshold}
+          onChangeBudget={setBudgetThreshold}
+          currency={currency}
+        />
         <GetStartedPage onFinish={finish} />
       </ScrollView>
 
@@ -229,6 +239,99 @@ function CurrencyPage({
             </Pressable>
           );
         })}
+      </View>
+    </View>
+  );
+}
+
+function BudgetThresholdPage({
+  budget,
+  onChangeBudget,
+  currency,
+}: {
+  budget: number;
+  onChangeBudget: (b: number) => void;
+  currency: CurrencyCode;
+}) {
+  const { t } = useTranslation();
+  const isDark = useColorScheme() === 'dark';
+  const theme = isDark ? colors.dark : colors.light;
+  const { isTablet } = useDeviceOrientation();
+  const currencySymbol = CURRENCIES[currency]?.symbol || '$';
+
+  const presetAmounts = [100, 250, 500, 1000, 2000];
+
+  return (
+    <View style={[styles.page, { width }]}>
+      <Text
+        style={[
+          styles.title,
+          { color: theme.textPrimary },
+          isTablet && styles.titleTablet,
+        ]}
+      >
+        {t('onboarding.budgetThreshold')}
+      </Text>
+      <Text
+        style={[
+          styles.body,
+          { color: theme.textSecondary },
+          isTablet && styles.bodyTablet,
+        ]}
+      >
+        {t('onboarding.budgetThresholdBody')}
+      </Text>
+      <View style={{ marginTop: isTablet ? 24 : 16, alignItems: 'center' }}>
+        <View
+          style={[styles.budgetInputContainer, { borderColor: theme.border }]}
+        >
+          <Text style={[styles.currencySymbol, { color: theme.textSecondary }]}>
+            {currencySymbol}
+          </Text>
+          <TextInput
+            style={[styles.budgetInput, { color: theme.textPrimary }]}
+            value={budget.toString()}
+            onChangeText={text => {
+              const num = parseInt(text.replace(/[^0-9]/g, ''), 10);
+              if (!isNaN(num)) {
+                onChangeBudget(num);
+              } else if (text === '') {
+                onChangeBudget(0);
+              }
+            }}
+            keyboardType="numeric"
+            placeholder="500"
+            placeholderTextColor={theme.textSecondary}
+          />
+        </View>
+        <View style={styles.presetContainer}>
+          {presetAmounts.map(amount => (
+            <Pressable
+              key={amount}
+              onPress={() => onChangeBudget(amount)}
+              style={[
+                styles.presetButton,
+                {
+                  borderColor: theme.border,
+                  backgroundColor:
+                    budget === amount ? colors.light.primary : 'transparent',
+                },
+                isTablet && styles.presetButtonTablet,
+              ]}
+            >
+              <Text
+                style={{
+                  color: budget === amount ? 'white' : theme.textPrimary,
+                  fontWeight: '600',
+                  fontSize: isTablet ? 16 : 14,
+                }}
+              >
+                {currencySymbol}
+                {amount}
+              </Text>
+            </Pressable>
+          ))}
+        </View>
       </View>
     </View>
   );
@@ -442,5 +545,44 @@ const styles = StyleSheet.create({
     paddingVertical: 20,
     borderRadius: 16,
     minWidth: 280,
+  },
+  budgetInputContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    borderWidth: 2,
+    borderRadius: 16,
+    paddingHorizontal: 20,
+    paddingVertical: 16,
+    marginBottom: 20,
+    minWidth: 200,
+  },
+  currencySymbol: {
+    fontSize: 32,
+    fontWeight: '700',
+    marginRight: 8,
+  },
+  budgetInput: {
+    fontSize: 32,
+    fontWeight: '800',
+    minWidth: 120,
+    textAlign: 'center',
+  },
+  presetContainer: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'center',
+    gap: 10,
+    maxWidth: 320,
+  },
+  presetButton: {
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+    borderRadius: 20,
+    borderWidth: StyleSheet.hairlineWidth,
+  },
+  presetButtonTablet: {
+    paddingHorizontal: 24,
+    paddingVertical: 14,
+    borderRadius: 24,
   },
 });

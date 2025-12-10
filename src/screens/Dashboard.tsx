@@ -26,37 +26,72 @@ export default function Dashboard() {
     accounts.reduce((sum, a) => sum + a.initial_balance, 0) +
     transactions.reduce((sum, t) => sum + t.amount, 0);
 
-  const totalBudgeted = envelopes.reduce((sum, e) => sum + e.budgeted_amount, 0);
-  const totalSpent = transactions
-    .filter(t => t.type !== 'income')
-    .reduce((sum, t) => sum + Math.abs(Math.min(0, t.amount)), 0);
-  const overallPct = Math.max(0, Math.min(1, totalBudgeted ? totalSpent / totalBudgeted : 0));
+  const totalBudgeted = envelopes.reduce(
+    (sum, e) => sum + e.budgeted_amount,
+    0,
+  );
+  // Only count expenses that are linked to envelopes for budget usage
+  const totalSpentInEnvelopes = transactions
+    .filter(t => t.type === 'expense' && t.envelope_id)
+    .reduce((sum, t) => sum + Math.abs(t.amount), 0);
+  const overallPct = Math.max(
+    0,
+    Math.min(1, totalBudgeted ? totalSpentInEnvelopes / totalBudgeted : 0),
+  );
 
   function getSpentForEnvelope(id: string) {
     return transactions
-      .filter(t => t.envelope_id === id)
-      .filter(t => t.type !== 'income')
-      .reduce((sum, t) => sum + Math.abs(Math.min(0, t.amount)), 0);
+      .filter(t => t.envelope_id === id && t.type === 'expense')
+      .reduce((sum, t) => sum + Math.abs(t.amount), 0);
   }
 
-  const topEnvelope = envelopes[0];
-  const topEnvelopeSpent = topEnvelope ? getSpentForEnvelope(topEnvelope.id) : 0;
-  const topEnvelopePct = topEnvelope ? Math.max(0, Math.min(1, topEnvelopeSpent / Math.max(1, topEnvelope.budgeted_amount))) : 0;
+  // Calculate spending per envelope and sort by spent amount
+  const envelopesWithSpending = useMemo(() => {
+    return envelopes
+      .map(env => ({
+        envelope: env,
+        spent: getSpentForEnvelope(env.id),
+        pct: Math.max(
+          0,
+          Math.min(
+            1,
+            getSpentForEnvelope(env.id) / Math.max(1, env.budgeted_amount),
+          ),
+        ),
+      }))
+      .filter(item => item.spent > 0) // Only show envelopes with spending
+      .sort((a, b) => b.spent - a.spent);
+  }, [envelopes, transactions]);
 
-  const largestExpense = useMemo(() => {
-    const exp = transactions.filter(t => t.type === 'expense');
-    if (exp.length === 0) return undefined;
-    return exp.slice().sort((a, b) => Math.abs(b.amount) - Math.abs(a.amount))[0];
-  }, [transactions]);
+  // Get top envelope (most spending or first one)
+  const topEnvelopeData = envelopesWithSpending[0];
+  const topEnvelope = topEnvelopeData?.envelope;
+  const topEnvelopeSpent = topEnvelopeData?.spent ?? 0;
+  const topEnvelopePct = topEnvelopeData?.pct ?? 0;
 
   return (
-    <View style={[styles.container]}> 
-      <AddTransactionModal visible={showAdd} onClose={() => setShowAdd(false)} />
-      <ScrollView contentContainerStyle={{ padding: 16, paddingBottom: 140 }} showsVerticalScrollIndicator={false}>
-        <View style={[styles.screenCard, { backgroundColor: theme.surface }]}> 
-          <Text style={[styles.headerTitle, { color: theme.textPrimary }]}>{t('screens.dashboard')}</Text>
+    <View style={[styles.container]}>
+      <AddTransactionModal
+        visible={showAdd}
+        onClose={() => setShowAdd(false)}
+      />
+      <ScrollView
+        contentContainerStyle={{ padding: 16, paddingBottom: 140 }}
+        showsVerticalScrollIndicator={false}
+      >
+        <View style={[styles.screenCard, { backgroundColor: theme.surface }]}>
+          <Text style={[styles.headerTitle, { color: theme.textPrimary }]}>
+            {t('screens.dashboard')}
+          </Text>
 
-          <View style={{ flexDirection: 'row', gap: 16, alignItems: 'center', marginBottom: 12 }}>
+          <View
+            style={{
+              flexDirection: 'row',
+              gap: 16,
+              alignItems: 'center',
+              marginBottom: 12,
+            }}
+          >
             <RingProgress
               size={140}
               strokeWidth={18}
@@ -67,7 +102,9 @@ export default function Dashboard() {
               <Text style={{ fontSize: 28 }}>🛒</Text>
             </RingProgress>
             <View style={{ flex: 1 }}>
-              <Text style={{ color: theme.textSecondary, fontSize: 18 }}>{t('common.totalBalance')}</Text>
+              <Text style={{ color: theme.textSecondary, fontSize: 18 }}>
+                {t('common.totalBalance')}
+              </Text>
               <CurrencyDisplay
                 amount={totalBalance}
                 currency={baseCurrency}
@@ -76,45 +113,89 @@ export default function Dashboard() {
             </View>
           </View>
 
-          <Text style={[styles.sectionTitle, { color: theme.textPrimary }]}>{t('screens.envelopes')}</Text>
-          {topEnvelope ? (
-            <EnvelopeSummaryCard envelope={topEnvelope} spent={topEnvelopeSpent} />
+          <Text style={[styles.sectionTitle, { color: theme.textPrimary }]}>
+            {t('screens.envelopes')}
+          </Text>
+          {envelopesWithSpending.length > 0 ? (
+            envelopesWithSpending
+              .slice(0, 3)
+              .map(item => (
+                <EnvelopeSummaryCard
+                  key={item.envelope.id}
+                  envelope={item.envelope}
+                  spent={item.spent}
+                />
+              ))
           ) : (
             <View style={[styles.card, { backgroundColor: theme.surface }]} />
           )}
 
-          <Text style={[styles.sectionTitle, { color: theme.textPrimary }]}>{t('common.budgetUsage')}</Text>
+          <Text style={[styles.sectionTitle, { color: theme.textPrimary }]}>
+            {t('common.budgetUsage')}
+          </Text>
           <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-            <View style={{ flex: 1, gap: 12 }}>
-              {topEnvelope && (
-                <View style={styles.legendRow}>
-                  <View style={[styles.dot, { backgroundColor: topEnvelope.color }]} />
-                  <Text style={{ color: theme.textPrimary }}> {getTranslatedEnvelopeName(topEnvelope.name, t)}</Text>
+            <View style={{ flex: 1, gap: 8 }}>
+              {envelopesWithSpending.slice(0, 4).map((item, index) => (
+                <View key={item.envelope.id} style={styles.legendRow}>
+                  <View
+                    style={[
+                      styles.dot,
+                      {
+                        backgroundColor:
+                          item.envelope.color ||
+                          colors.accents[index % colors.accents.length],
+                      },
+                    ]}
+                  />
+                  <Text
+                    style={{ color: theme.textPrimary, flex: 1 }}
+                    numberOfLines={1}
+                  >
+                    {getTranslatedEnvelopeName(item.envelope.name, t)}
+                  </Text>
+                  <Text style={{ color: theme.textSecondary, fontSize: 12 }}>
+                    {Math.round(item.pct * 100)}%
+                  </Text>
                 </View>
-              )}
-              {largestExpense && (
-                <View style={styles.legendRow}>
-                  <View style={[styles.dot, { backgroundColor: colors.accents[2] }]} />
-                  <Text style={{ color: theme.textPrimary }}> {largestExpense.note || t('envelope.shoppingTrip')}</Text>
-                </View>
+              ))}
+              {envelopes.length === 0 && (
+                <Text
+                  style={{ color: theme.textSecondary, fontStyle: 'italic' }}
+                >
+                  {t('common.noTransactions')}
+                </Text>
               )}
             </View>
             <RingProgress
               size={110}
               strokeWidth={14}
-              progress={topEnvelopePct}
+              progress={overallPct}
               color={'#EF4444'}
               trackColor={isDark ? '#1F2937' : '#FEE2E2'}
             >
-              <Text style={{ fontWeight: '800', color: theme.textPrimary }}>{Math.round(topEnvelopePct * 100)}%</Text>
+              <Text style={{ fontWeight: '800', color: theme.textPrimary }}>
+                {Math.round(overallPct * 100)}%
+              </Text>
             </RingProgress>
           </View>
 
-          <Text style={[styles.sectionTitle, { color: theme.textPrimary, marginTop: 8 }]}>{t('screens.transactions')}</Text>
+          <Text
+            style={[
+              styles.sectionTitle,
+              { color: theme.textPrimary, marginTop: 8 },
+            ]}
+          >
+            {t('screens.transactions')}
+          </Text>
           <Text style={{ color: theme.textSecondary, marginBottom: 6 }}>
             {new Date().toDateString()}
           </Text>
-          <View style={[styles.card, { backgroundColor: theme.surface, paddingHorizontal: 16 }]}> 
+          <View
+            style={[
+              styles.card,
+              { backgroundColor: theme.surface, paddingHorizontal: 16 },
+            ]}
+          >
             {transactions.slice(0, 5).map(tx => (
               <TransactionRow key={tx.id} tx={tx} />
             ))}

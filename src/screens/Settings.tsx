@@ -12,6 +12,9 @@ import {
   Alert,
   Linking,
   Platform,
+  TextInput,
+  Keyboard,
+  TouchableWithoutFeedback,
 } from 'react-native';
 import LockScreen from '../components/LockScreen';
 import { authService } from '../services/authService';
@@ -195,386 +198,469 @@ export default function Settings() {
     LANGUAGES.find(l => l.code === settings.language) || LANGUAGES[0];
 
   return (
-    <ScrollView style={{ flex: 1, backgroundColor: theme.background }}>
-      <View style={{ padding: 16 }}>
-        <Text style={[styles.headerTitle, { color: theme.textPrimary }]}>
-          {t('settings.title')}
-        </Text>
-
-        {/* Base Currency */}
-        <View style={[styles.row, { borderColor: theme.border }]}>
-          <Text style={{ color: theme.textPrimary, fontWeight: '600' }}>
-            {t('settings.base_currency')}
+    <TouchableWithoutFeedback onPress={Keyboard.dismiss} accessible={false}>
+      <ScrollView
+        style={{ flex: 1, backgroundColor: theme.background }}
+        keyboardShouldPersistTaps="handled"
+      >
+        <View style={{ padding: 16 }}>
+          <Text style={[styles.headerTitle, { color: theme.textPrimary }]}>
+            {t('settings.title')}
           </Text>
+
+          {/* Base Currency */}
+          <View style={[styles.row, { borderColor: theme.border }]}>
+            <Text style={{ color: theme.textPrimary, fontWeight: '600' }}>
+              {t('settings.base_currency')}
+            </Text>
+            <Pressable
+              onPress={() => {
+                haptic('light');
+                setShowCurrencyPicker(true);
+              }}
+              style={styles.currencySelector}
+            >
+              <Text style={{ color: theme.textSecondary, marginRight: 8 }}>
+                {CURRENCIES[settings.base_currency as CurrencyCode]?.flag}{' '}
+                {settings.base_currency}
+              </Text>
+              <Text style={{ color: theme.textSecondary }}>
+                {t('symbols.dropdown')}
+              </Text>
+            </Pressable>
+          </View>
+
+          {/* Default Budget */}
+          <View style={[styles.row, { borderColor: theme.border }]}>
+            <Text style={{ color: theme.textPrimary, fontWeight: '600' }}>
+              {t('settings.default_budget')}
+            </Text>
+            <View style={styles.budgetInputRow}>
+              <Text style={{ color: theme.textSecondary, marginRight: 4 }}>
+                {CURRENCIES[settings.base_currency as CurrencyCode]?.symbol}
+              </Text>
+              <TextInput
+                style={[
+                  styles.budgetInputSmall,
+                  { color: theme.textPrimary, borderColor: theme.border },
+                ]}
+                value={(settings.default_budget ?? 500).toString()}
+                onChangeText={text => {
+                  const num = parseInt(text.replace(/[^0-9]/g, ''), 10);
+                  if (!isNaN(num)) {
+                    updateSettings({ default_budget: num });
+                  } else if (text === '') {
+                    updateSettings({ default_budget: 0 });
+                  }
+                }}
+                keyboardType="numeric"
+                returnKeyType="done"
+                onSubmitEditing={Keyboard.dismiss}
+                placeholder="500"
+                placeholderTextColor={theme.textSecondary}
+              />
+            </View>
+          </View>
+
+          {/* Theme */}
+          <View style={[styles.row, { borderColor: theme.border }]}>
+            <Text style={{ color: theme.textPrimary, fontWeight: '600' }}>
+              {t('settings.theme')}
+            </Text>
+          </View>
+          <View
+            style={{
+              flexDirection: 'row',
+              flexWrap: 'wrap',
+              gap: 8,
+              marginBottom: 16,
+            }}
+          >
+            {THEMES.map(({ mode, labelKey }) => (
+              <Pressable
+                key={mode}
+                onPress={async () => {
+                  haptic('selection');
+                  updateSettings({ theme: mode });
+                }}
+                style={[
+                  styles.chip,
+                  {
+                    borderColor: theme.border,
+                    backgroundColor:
+                      settings.theme === mode ? theme.primary : 'transparent',
+                  },
+                ]}
+              >
+                <Text
+                  style={{
+                    color:
+                      settings.theme === mode ? 'white' : theme.textPrimary,
+                    fontWeight: '700',
+                  }}
+                >
+                  {t(labelKey)}
+                </Text>
+              </Pressable>
+            ))}
+          </View>
+
+          {/* Sound */}
+          <View style={[styles.row, { borderColor: theme.border }]}>
+            <Text style={{ color: theme.textPrimary, fontWeight: '600' }}>
+              {t('settings.sound')}
+            </Text>
+            <Switch
+              value={settings.sound_enabled ?? true}
+              onValueChange={async value => {
+                haptic('light');
+                await updateSettings({ sound_enabled: value });
+              }}
+            />
+          </View>
+
+          {/* Haptics */}
+          <View style={[styles.row, { borderColor: theme.border }]}>
+            <Text style={{ color: theme.textPrimary, fontWeight: '600' }}>
+              {t('settings.haptics')}
+            </Text>
+            <Switch
+              value={settings.haptics_enabled ?? true}
+              onValueChange={async value => {
+                // Trigger haptic before disabling (so user feels it)
+                if (value || settings.haptics_enabled !== false) {
+                  triggerHaptic('light');
+                }
+                await updateSettings({ haptics_enabled: value });
+              }}
+            />
+          </View>
+
+          {/* Language Accordion */}
           <Pressable
+            style={[styles.row, { borderColor: theme.border }]}
             onPress={() => {
               haptic('light');
-              setShowCurrencyPicker(true);
+              setLanguageExpanded(!languageExpanded);
             }}
-            style={styles.currencySelector}
           >
-            <Text style={{ color: theme.textSecondary, marginRight: 8 }}>
-              {CURRENCIES[settings.base_currency as CurrencyCode]?.flag}{' '}
-              {settings.base_currency}
+            <Text style={{ color: theme.textPrimary, fontWeight: '600' }}>
+              {t('settings.language')}
             </Text>
-            <Text style={{ color: theme.textSecondary }}>
-              {t('symbols.dropdown')}
-            </Text>
-          </Pressable>
-        </View>
-
-        {/* Theme */}
-        <View style={[styles.row, { borderColor: theme.border }]}>
-          <Text style={{ color: theme.textPrimary, fontWeight: '600' }}>
-            {t('settings.theme')}
-          </Text>
-        </View>
-        <View
-          style={{
-            flexDirection: 'row',
-            flexWrap: 'wrap',
-            gap: 8,
-            marginBottom: 16,
-          }}
-        >
-          {THEMES.map(({ mode, labelKey }) => (
-            <Pressable
-              key={mode}
-              onPress={async () => {
-                haptic('selection');
-                updateSettings({ theme: mode });
-              }}
-              style={[
-                styles.chip,
-                {
-                  borderColor: theme.border,
-                  backgroundColor:
-                    settings.theme === mode ? theme.primary : 'transparent',
-                },
-              ]}
-            >
-              <Text
-                style={{
-                  color: settings.theme === mode ? 'white' : theme.textPrimary,
-                  fontWeight: '700',
-                }}
-              >
-                {t(labelKey)}
-              </Text>
-            </Pressable>
-          ))}
-        </View>
-
-        {/* Sound */}
-        <View style={[styles.row, { borderColor: theme.border }]}>
-          <Text style={{ color: theme.textPrimary, fontWeight: '600' }}>
-            {t('settings.sound')}
-          </Text>
-          <Switch
-            value={settings.sound_enabled ?? true}
-            onValueChange={async value => {
-              haptic('light');
-              await updateSettings({ sound_enabled: value });
-            }}
-          />
-        </View>
-
-        {/* Haptics */}
-        <View style={[styles.row, { borderColor: theme.border }]}>
-          <Text style={{ color: theme.textPrimary, fontWeight: '600' }}>
-            {t('settings.haptics')}
-          </Text>
-          <Switch
-            value={settings.haptics_enabled ?? true}
-            onValueChange={async value => {
-              // Trigger haptic before disabling (so user feels it)
-              if (value || settings.haptics_enabled !== false) {
-                triggerHaptic('light');
-              }
-              await updateSettings({ haptics_enabled: value });
-            }}
-          />
-        </View>
-
-        {/* Language Accordion */}
-        <Pressable
-          style={[styles.row, { borderColor: theme.border }]}
-          onPress={() => {
-            haptic('light');
-            setLanguageExpanded(!languageExpanded);
-          }}
-        >
-          <Text style={{ color: theme.textPrimary, fontWeight: '600' }}>
-            {t('settings.language')}
-          </Text>
-          <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-            {FLAGS[currentLanguage.code] && (
-              <Image
-                source={FLAGS[currentLanguage.code]}
-                style={styles.flagIcon}
-                resizeMode="cover"
-              />
-            )}
-            <Text style={{ color: theme.textSecondary, marginRight: 8 }}>
-              {currentLanguage.native}
-            </Text>
-            <Animated.Text
-              style={[{ color: theme.textSecondary }, arrowAnimStyle]}
-            >
-              {t('symbols.dropdown')}
-            </Animated.Text>
-          </View>
-        </Pressable>
-
-        <Animated.View
-          style={[
-            styles.accordionContent,
-            { backgroundColor: theme.surface, borderColor: theme.border },
-            accordionAnimStyle,
-          ]}
-        >
-          {LANGUAGES.map(lang => (
-            <Pressable
-              key={lang.code}
-              onPress={async () => {
-                haptic('selection');
-                // Change i18n language first for immediate UI update
-                await i18n.changeLanguage(lang.code);
-                // Then persist to store/database
-                await updateSettings({ language: lang.code });
-                setLanguageExpanded(false);
-              }}
-              style={[
-                styles.languageOption,
-                {
-                  borderColor: theme.border,
-                  backgroundColor:
-                    settings.language === lang.code
-                      ? theme.primary
-                      : 'transparent',
-                },
-              ]}
-            >
-              <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                {FLAGS[lang.code] && (
-                  <Image
-                    source={FLAGS[lang.code]}
-                    style={styles.flagIconLarge}
-                    resizeMode="cover"
-                  />
-                )}
-                <View>
-                  <Text
-                    style={{
-                      color:
-                        settings.language === lang.code
-                          ? 'white'
-                          : theme.textPrimary,
-                      fontWeight: '600',
-                      fontSize: 15,
-                    }}
-                  >
-                    {lang.native}
-                  </Text>
-                  <Text
-                    style={{
-                      color:
-                        settings.language === lang.code
-                          ? 'rgba(255,255,255,0.8)'
-                          : theme.textSecondary,
-                      fontSize: 13,
-                    }}
-                  >
-                    {lang.label}
-                  </Text>
-                </View>
-              </View>
-              {settings.language === lang.code && (
-                <Text style={{ color: 'white', fontSize: 18 }}>
-                  {t('symbols.checkmark')}
-                </Text>
+            <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+              {FLAGS[currentLanguage.code] && (
+                <Image
+                  source={FLAGS[currentLanguage.code]}
+                  style={styles.flagIcon}
+                  resizeMode="cover"
+                />
               )}
-            </Pressable>
-          ))}
-        </Animated.View>
+              <Text style={{ color: theme.textSecondary, marginRight: 8 }}>
+                {currentLanguage.native}
+              </Text>
+              <Animated.Text
+                style={[{ color: theme.textSecondary }, arrowAnimStyle]}
+              >
+                {t('symbols.dropdown')}
+              </Animated.Text>
+            </View>
+          </Pressable>
 
-        {/* Currency Picker Modal */}
-        <Modal
-          visible={showCurrencyPicker}
-          animationType="slide"
-          presentationStyle="pageSheet"
-          onRequestClose={() => setShowCurrencyPicker(false)}
-        >
-          <View
+          <Animated.View
             style={[
-              styles.modalContainer,
-              { backgroundColor: theme.background },
+              styles.accordionContent,
+              { backgroundColor: theme.surface, borderColor: theme.border },
+              accordionAnimStyle,
             ]}
           >
-            <View style={styles.swipeIndicator} />
-            <View style={styles.modalHeader}>
-              <Text style={[styles.modalTitle, { color: theme.textPrimary }]}>
-                {t('currency.selectBase')}
-              </Text>
-            </View>
+            {LANGUAGES.map(lang => (
+              <Pressable
+                key={lang.code}
+                onPress={async () => {
+                  haptic('selection');
+                  // Change i18n language first for immediate UI update
+                  await i18n.changeLanguage(lang.code);
+                  // Then persist to store/database
+                  await updateSettings({ language: lang.code });
+                  setLanguageExpanded(false);
+                }}
+                style={[
+                  styles.languageOption,
+                  {
+                    borderColor: theme.border,
+                    backgroundColor:
+                      settings.language === lang.code
+                        ? theme.primary
+                        : 'transparent',
+                  },
+                ]}
+              >
+                <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                  {FLAGS[lang.code] && (
+                    <Image
+                      source={FLAGS[lang.code]}
+                      style={styles.flagIconLarge}
+                      resizeMode="cover"
+                    />
+                  )}
+                  <View>
+                    <Text
+                      style={{
+                        color:
+                          settings.language === lang.code
+                            ? 'white'
+                            : theme.textPrimary,
+                        fontWeight: '600',
+                        fontSize: 15,
+                      }}
+                    >
+                      {lang.native}
+                    </Text>
+                    <Text
+                      style={{
+                        color:
+                          settings.language === lang.code
+                            ? 'rgba(255,255,255,0.8)'
+                            : theme.textSecondary,
+                        fontSize: 13,
+                      }}
+                    >
+                      {lang.label}
+                    </Text>
+                  </View>
+                </View>
+                {settings.language === lang.code && (
+                  <Text style={{ color: 'white', fontSize: 18 }}>
+                    {t('symbols.checkmark')}
+                  </Text>
+                )}
+              </Pressable>
+            ))}
+          </Animated.View>
 
-            <ScrollView style={styles.currencyList}>
-              {Object.values(CURRENCIES).map(currency => {
-                const localizedCurrency =
-                  currencyService.getLocalizedCurrencyInfo(currency.code, t);
-                return (
-                  <Pressable
-                    key={currency.code}
-                    onPress={async () => {
-                      haptic('selection');
-                      if (currency.code !== settings.base_currency) {
-                        await updateSettings({ base_currency: currency.code });
-                      }
-                      setShowCurrencyPicker(false);
-                    }}
-                    style={[
-                      styles.currencyOption,
-                      {
-                        borderColor: theme.border,
-                        backgroundColor:
-                          settings.base_currency === currency.code
-                            ? theme.primary
-                            : 'transparent',
-                      },
-                    ]}
-                  >
-                    <View style={styles.currencyOptionContent}>
-                      <Text style={{ fontSize: 24, marginRight: 12 }}>
-                        {currency.flag}
-                      </Text>
-                      <View>
-                        <Text
-                          style={[
-                            styles.currencyName,
-                            {
-                              color:
-                                settings.base_currency === currency.code
-                                  ? 'white'
-                                  : theme.textPrimary,
-                            },
-                          ]}
-                        >
-                          {localizedCurrency.name}
+          {/* Currency Picker Modal */}
+          <Modal
+            visible={showCurrencyPicker}
+            animationType="slide"
+            presentationStyle="pageSheet"
+            onRequestClose={() => setShowCurrencyPicker(false)}
+          >
+            <View
+              style={[
+                styles.modalContainer,
+                { backgroundColor: theme.background },
+              ]}
+            >
+              <View style={styles.swipeIndicator} />
+              <View style={styles.modalHeader}>
+                <Text style={[styles.modalTitle, { color: theme.textPrimary }]}>
+                  {t('currency.selectBase')}
+                </Text>
+              </View>
+
+              <ScrollView style={styles.currencyList}>
+                {Object.values(CURRENCIES).map(currency => {
+                  const localizedCurrency =
+                    currencyService.getLocalizedCurrencyInfo(currency.code, t);
+                  return (
+                    <Pressable
+                      key={currency.code}
+                      onPress={async () => {
+                        haptic('selection');
+                        if (currency.code !== settings.base_currency) {
+                          await updateSettings({
+                            base_currency: currency.code,
+                          });
+                        }
+                        setShowCurrencyPicker(false);
+                      }}
+                      style={[
+                        styles.currencyOption,
+                        {
+                          borderColor: theme.border,
+                          backgroundColor:
+                            settings.base_currency === currency.code
+                              ? theme.primary
+                              : 'transparent',
+                        },
+                      ]}
+                    >
+                      <View style={styles.currencyOptionContent}>
+                        <Text style={{ fontSize: 24, marginRight: 12 }}>
+                          {currency.flag}
                         </Text>
-                        <Text
-                          style={[
-                            styles.currencyCode,
-                            {
-                              color:
-                                settings.base_currency === currency.code
-                                  ? 'rgba(255,255,255,0.8)'
-                                  : theme.textSecondary,
-                            },
-                          ]}
-                        >
-                          {currency.code} ({currency.symbol})
-                        </Text>
+                        <View>
+                          <Text
+                            style={[
+                              styles.currencyName,
+                              {
+                                color:
+                                  settings.base_currency === currency.code
+                                    ? 'white'
+                                    : theme.textPrimary,
+                              },
+                            ]}
+                          >
+                            {localizedCurrency.name}
+                          </Text>
+                          <Text
+                            style={[
+                              styles.currencyCode,
+                              {
+                                color:
+                                  settings.base_currency === currency.code
+                                    ? 'rgba(255,255,255,0.8)'
+                                    : theme.textSecondary,
+                              },
+                            ]}
+                          >
+                            {currency.code} ({currency.symbol})
+                          </Text>
+                        </View>
                       </View>
-                    </View>
-                    {settings.base_currency === currency.code && (
-                      <Text style={{ color: 'white', fontSize: 20 }}>
-                        {t('symbols.checkmark')}
-                      </Text>
-                    )}
-                  </Pressable>
-                );
-              })}
-            </ScrollView>
-          </View>
-        </Modal>
-
-        {/* Passcode */}
-        <View style={[styles.row, { borderColor: theme.border }]}>
-          <Text style={{ color: theme.textPrimary, fontWeight: '600' }}>
-            {t('settings.passcode')}
-          </Text>
-          <Switch
-            value={settings.passcode_enabled}
-            onValueChange={async value => {
-              haptic('light');
-              if (value) {
-                // Enable passcode
-                if (biometricAvailable) {
-                  // Biometric available - authenticate first, then enable
-                  const { biometryType } =
-                    await authService.checkBiometricAvailability();
-                  const promptMessage =
-                    biometryType === 'FaceID'
-                      ? t('lock.faceIdPrompt')
-                      : t('lock.touchIdPrompt');
-                  const success = await authService.authenticateWithBiometrics(
-                    promptMessage || 'Authenticate to enable passcode',
+                      {settings.base_currency === currency.code && (
+                        <Text style={{ color: 'white', fontSize: 20 }}>
+                          {t('symbols.checkmark')}
+                        </Text>
+                      )}
+                    </Pressable>
                   );
-                  if (success) {
-                    await updateSettings({ passcode_enabled: true });
+                })}
+              </ScrollView>
+            </View>
+          </Modal>
+
+          {/* Passcode */}
+          <View style={[styles.row, { borderColor: theme.border }]}>
+            <Text style={{ color: theme.textPrimary, fontWeight: '600' }}>
+              {t('settings.passcode')}
+            </Text>
+            <Switch
+              value={settings.passcode_enabled}
+              onValueChange={async value => {
+                haptic('light');
+                if (value) {
+                  // Enable passcode
+                  if (biometricAvailable) {
+                    // Biometric available - authenticate first, then enable
+                    const { biometryType } =
+                      await authService.checkBiometricAvailability();
+                    const promptMessage =
+                      biometryType === 'FaceID'
+                        ? t('lock.faceIdPrompt')
+                        : t('lock.touchIdPrompt');
+                    const success =
+                      await authService.authenticateWithBiometrics(
+                        promptMessage || 'Authenticate to enable passcode',
+                      );
+                    if (success) {
+                      await updateSettings({ passcode_enabled: true });
+                    }
+                  } else {
+                    // No biometric - show PIN setup
+                    setShowPasscodeSetup(true);
                   }
                 } else {
-                  // No biometric - show PIN setup
-                  setShowPasscodeSetup(true);
+                  // Disable passcode
+                  await authService.clearPasscode();
+                  await updateSettings({ passcode_enabled: false });
                 }
-              } else {
-                // Disable passcode
-                await authService.clearPasscode();
-                await updateSettings({ passcode_enabled: false });
-              }
-            }}
-          />
-        </View>
+              }}
+            />
+          </View>
 
-        {/* Passcode Setup Modal */}
-        <Modal
-          visible={showPasscodeSetup}
-          animationType="slide"
-          presentationStyle="fullScreen"
-          onRequestClose={() => setShowPasscodeSetup(false)}
-        >
-          <LockScreen
-            mode="setup"
-            onUnlock={() => setShowPasscodeSetup(false)}
-            onSetupComplete={async passcode => {
-              await authService.savePasscode(passcode);
-              await updateSettings({ passcode_enabled: true });
-              setShowPasscodeSetup(false);
-            }}
-          />
-        </Modal>
+          {/* Passcode Setup Modal */}
+          <Modal
+            visible={showPasscodeSetup}
+            animationType="slide"
+            presentationStyle="fullScreen"
+            onRequestClose={() => setShowPasscodeSetup(false)}
+          >
+            <LockScreen
+              mode="setup"
+              onUnlock={() => setShowPasscodeSetup(false)}
+              onSetupComplete={async passcode => {
+                await authService.savePasscode(passcode);
+                await updateSettings({ passcode_enabled: true });
+                setShowPasscodeSetup(false);
+              }}
+            />
+          </Modal>
 
-        {/* Notifications */}
-        <View style={[styles.row, { borderColor: theme.border }]}>
-          <Text style={{ color: theme.textPrimary, fontWeight: '600' }}>
-            {t('settings.notifications')}
-          </Text>
-          <Switch
-            value={notificationsEnabled}
-            onValueChange={async () => {
-              haptic('light');
-              try {
-                const notifee = require('@notifee/react-native').default;
-                const currentStatus = await checkNotificationPermission();
+          {/* Notifications */}
+          <View style={[styles.row, { borderColor: theme.border }]}>
+            <Text style={{ color: theme.textPrimary, fontWeight: '600' }}>
+              {t('settings.notifications')}
+            </Text>
+            <Switch
+              value={notificationsEnabled}
+              onValueChange={async () => {
+                haptic('light');
+                try {
+                  const notifee = require('@notifee/react-native').default;
+                  const currentStatus = await checkNotificationPermission();
 
-                // AuthorizationStatus: -1 = NOT_DETERMINED, 0 = DENIED, 1 = AUTHORIZED, 2 = PROVISIONAL
-                if (currentStatus === -1) {
-                  // Not determined - request permission (shows system prompt)
-                  const newSettings = await notifee.requestPermission();
-                  const granted =
-                    newSettings.authorizationStatus === 1 ||
-                    newSettings.authorizationStatus === 2;
-                  setNotificationsEnabled(granted);
+                  // AuthorizationStatus: -1 = NOT_DETERMINED, 0 = DENIED, 1 = AUTHORIZED, 2 = PROVISIONAL
+                  if (currentStatus === -1) {
+                    // Not determined - request permission (shows system prompt)
+                    const newSettings = await notifee.requestPermission();
+                    const granted =
+                      newSettings.authorizationStatus === 1 ||
+                      newSettings.authorizationStatus === 2;
+                    setNotificationsEnabled(granted);
 
-                  if (!granted) {
-                    // Permission was denied
+                    if (!granted) {
+                      // Permission was denied
+                      Alert.alert(
+                        t('settings.notifications'),
+                        Platform.OS === 'ios'
+                          ? 'Notifications permission was denied. You can enable it in Settings.'
+                          : 'Notifications permission was denied. You can enable it in app settings.',
+                        [
+                          { text: 'OK', style: 'cancel' },
+                          {
+                            text: 'Open Settings',
+                            onPress: () => {
+                              if (Platform.OS === 'ios') {
+                                Linking.openURL('app-settings:');
+                              } else {
+                                Linking.openSettings();
+                              }
+                            },
+                          },
+                        ],
+                      );
+                    }
+                  } else if (currentStatus === 0) {
+                    // Previously denied - must go to settings
                     Alert.alert(
                       t('settings.notifications'),
                       Platform.OS === 'ios'
-                        ? 'Notifications permission was denied. You can enable it in Settings.'
-                        : 'Notifications permission was denied. You can enable it in app settings.',
+                        ? 'Notifications are disabled. Please enable them in Settings.'
+                        : 'Notifications are disabled. Please enable them in app settings.',
                       [
-                        { text: 'OK', style: 'cancel' },
+                        { text: t('common.cancel'), style: 'cancel' },
+                        {
+                          text: 'Open Settings',
+                          onPress: () => {
+                            if (Platform.OS === 'ios') {
+                              Linking.openURL('app-settings:');
+                            } else {
+                              Linking.openSettings();
+                            }
+                          },
+                        },
+                      ],
+                    );
+                  } else {
+                    // Already authorized - user wants to disable, must go to settings
+                    Alert.alert(
+                      t('settings.notifications'),
+                      Platform.OS === 'ios'
+                        ? 'To disable notifications, please go to Settings.'
+                        : 'To disable notifications, please go to app settings.',
+                      [
+                        { text: t('common.cancel'), style: 'cancel' },
                         {
                           text: 'Open Settings',
                           onPress: () => {
@@ -588,57 +674,18 @@ export default function Settings() {
                       ],
                     );
                   }
-                } else if (currentStatus === 0) {
-                  // Previously denied - must go to settings
-                  Alert.alert(
-                    t('settings.notifications'),
-                    Platform.OS === 'ios'
-                      ? 'Notifications are disabled. Please enable them in Settings.'
-                      : 'Notifications are disabled. Please enable them in app settings.',
-                    [
-                      { text: t('common.cancel'), style: 'cancel' },
-                      {
-                        text: 'Open Settings',
-                        onPress: () => {
-                          if (Platform.OS === 'ios') {
-                            Linking.openURL('app-settings:');
-                          } else {
-                            Linking.openSettings();
-                          }
-                        },
-                      },
-                    ],
-                  );
-                } else {
-                  // Already authorized - user wants to disable, must go to settings
-                  Alert.alert(
-                    t('settings.notifications'),
-                    Platform.OS === 'ios'
-                      ? 'To disable notifications, please go to Settings.'
-                      : 'To disable notifications, please go to app settings.',
-                    [
-                      { text: t('common.cancel'), style: 'cancel' },
-                      {
-                        text: 'Open Settings',
-                        onPress: () => {
-                          if (Platform.OS === 'ios') {
-                            Linking.openURL('app-settings:');
-                          } else {
-                            Linking.openSettings();
-                          }
-                        },
-                      },
-                    ],
+                } catch (error) {
+                  console.error(
+                    'Error handling notification permission:',
+                    error,
                   );
                 }
-              } catch (error) {
-                console.error('Error handling notification permission:', error);
-              }
-            }}
-          />
+              }}
+            />
+          </View>
         </View>
-      </View>
-    </ScrollView>
+      </ScrollView>
+    </TouchableWithoutFeedback>
   );
 }
 
@@ -665,6 +712,20 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     borderWidth: StyleSheet.hairlineWidth,
     borderColor: 'transparent',
+  },
+  budgetInputRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  budgetInputSmall: {
+    fontSize: 16,
+    fontWeight: '600',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderWidth: 1,
+    borderRadius: 8,
+    minWidth: 80,
+    textAlign: 'right',
   },
   modalContainer: {
     flex: 1,

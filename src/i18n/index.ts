@@ -24,6 +24,7 @@ const resources = {
       settings: {
         title: 'Settings',
         base_currency: 'Base currency',
+        default_budget: 'Default budget',
         theme: 'Theme',
         language: 'Language',
         pro: 'Pro',
@@ -79,6 +80,8 @@ const resources = {
           'Assign money to digital envelopes and stay on track.',
         baseCurrency: 'Base Currency',
         baseCurrencyBody: 'Choose your default currency.',
+        budgetThreshold: 'Budget Threshold',
+        budgetThresholdBody: 'Set your default monthly budget for envelopes.',
         getStarted: 'Get Started',
         getStartedBody: "We'll set up your first account and envelope.",
         createBudget: 'Create My Budget',
@@ -277,6 +280,7 @@ const resources = {
       settings: {
         title: 'Настройки',
         base_currency: 'Базовая валюта',
+        default_budget: 'Бюджет по умолчанию',
         theme: 'Тема',
         language: 'Язык',
         pro: 'Про',
@@ -332,6 +336,9 @@ const resources = {
           'Распределяйте деньги по цифровым конвертам и следите за расходами.',
         baseCurrency: 'Базовая валюта',
         baseCurrencyBody: 'Выберите валюту по умолчанию.',
+        budgetThreshold: 'Лимит бюджета',
+        budgetThresholdBody:
+          'Установите месячный бюджет по умолчанию для конвертов.',
         getStarted: 'Начать',
         getStartedBody: 'Мы настроим ваш первый счет и конверт.',
         createBudget: 'Создать мой бюджет',
@@ -487,6 +494,7 @@ const resources = {
       settings: {
         title: 'Ajustes',
         base_currency: 'Moneda base',
+        default_budget: 'Presupuesto predeterminado',
         theme: 'Tema',
         language: 'Idioma',
         pro: 'Pro',
@@ -542,6 +550,9 @@ const resources = {
           'Asigna dinero a sobres digitales y mantén el control.',
         baseCurrency: 'Moneda Base',
         baseCurrencyBody: 'Elige tu moneda predeterminada.',
+        budgetThreshold: 'Límite de Presupuesto',
+        budgetThresholdBody:
+          'Establece tu presupuesto mensual predeterminado para sobres.',
         getStarted: 'Comenzar',
         getStartedBody: 'Configuraremos tu primera cuenta y sobre.',
         createBudget: 'Crear Mi Presupuesto',
@@ -685,6 +696,7 @@ const resources = {
       settings: {
         title: 'Paramètres',
         base_currency: 'Devise de base',
+        default_budget: 'Budget par défaut',
         theme: 'Thème',
         language: 'Langue',
         pro: 'Pro',
@@ -740,6 +752,9 @@ const resources = {
           "Assignez de l'argent à des enveloppes numériques et restez sur la bonne voie.",
         baseCurrency: 'Devise de Base',
         baseCurrencyBody: 'Choisissez votre devise par défaut.',
+        budgetThreshold: 'Seuil de Budget',
+        budgetThresholdBody:
+          'Définissez votre budget mensuel par défaut pour les enveloppes.',
         getStarted: 'Commencer',
         getStartedBody: 'Nous configurerons votre premier compte et enveloppe.',
         createBudget: 'Créer Mon Budget',
@@ -884,6 +899,7 @@ const resources = {
       settings: {
         title: 'Einstellungen',
         base_currency: 'Basiswährung',
+        default_budget: 'Standardbudget',
         theme: 'Thema',
         language: 'Sprache',
         pro: 'Pro',
@@ -939,6 +955,9 @@ const resources = {
           'Weisen Sie Geld digitalen Umschlägen zu und bleiben Sie auf dem richtigen Weg.',
         baseCurrency: 'Basiswährung',
         baseCurrencyBody: 'Wählen Sie Ihre Standardwährung.',
+        budgetThreshold: 'Budgetgrenze',
+        budgetThresholdBody:
+          'Legen Sie Ihr monatliches Standardbudget für Umschläge fest.',
         getStarted: 'Loslegen',
         getStartedBody:
           'Wir richten Ihr erstes Konto und Ihren ersten Umschlag ein.',

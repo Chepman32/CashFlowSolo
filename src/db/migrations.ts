@@ -101,5 +101,16 @@ export const migrations = schemaMigrations({
         }),
       ],
     },
+    {
+      toVersion: 6,
+      steps: [
+        addColumns({
+          table: 'settings',
+          columns: [
+            { name: 'default_budget', type: 'number', isOptional: true },
+          ],
+        }),
+      ],
+    },
   ],
 });

@@ -25,6 +25,7 @@ export interface Settings {
   notifications_enabled?: boolean;
   sound_enabled?: boolean;
   haptics_enabled?: boolean;
+  default_budget?: number; // default budget threshold for envelopes
 }
 
 export interface Account {

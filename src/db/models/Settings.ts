@@ -15,4 +15,5 @@ export default class Settings extends Model {
   @field('notifications_enabled') notifications_enabled?: boolean;
   @field('sound_enabled') sound_enabled?: boolean;
   @field('haptics_enabled') haptics_enabled?: boolean;
+  @field('default_budget') default_budget?: number;
 }

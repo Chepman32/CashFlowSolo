@@ -1,7 +1,7 @@
 import { appSchema, tableSchema } from '@nozbe/watermelondb';
 
 export const schema = appSchema({
-  version: 5,
+  version: 6,
   tables: [
     tableSchema({
       name: 'settings',
@@ -17,6 +17,7 @@ export const schema = appSchema({
         { name: 'notifications_enabled', type: 'boolean', isOptional: true },
         { name: 'sound_enabled', type: 'boolean', isOptional: true },
         { name: 'haptics_enabled', type: 'boolean', isOptional: true },
+        { name: 'default_budget', type: 'number', isOptional: true },
       ],
     }),
     tableSchema({
