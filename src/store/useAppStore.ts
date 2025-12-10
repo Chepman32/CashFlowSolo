@@ -12,6 +12,7 @@ import type {
   AppNotification,
 } from '../types';
 import { gamificationService } from '../services/gamificationService';
+import { notificationService } from '../services/notificationService';
 
 type AppState = {
   settings: Settings;

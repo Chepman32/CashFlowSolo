@@ -1,6 +1,6 @@
 import React from 'react';
-import { View, Text, StyleSheet, useColorScheme } from 'react-native';
-import { colors } from '../theme/colors';
+import { View, Text, StyleSheet } from 'react-native';
+import { useAppTheme } from '../theme/ThemeProvider';
 import type { Envelope } from '../types';
 import { useTranslation } from 'react-i18next';
 import { useAppStore } from '../store/useAppStore';
@@ -8,10 +8,9 @@ import CurrencyDisplay from './CurrencyDisplay';
 import { getTranslatedEnvelopeName } from '../utils/translationHelpers';
 
 export default function EnvelopeSummaryCard({ envelope, spent }: { envelope: Envelope; spent: number }) {
-  const isDark = useColorScheme() === 'dark';
-  const theme = isDark ? colors.dark : colors.light;
+  const { isDark, colors: theme } = useAppTheme();
   const { t } = useTranslation();
-  const baseCurrency = useAppStore.getState().settings.base_currency;
+  const baseCurrency = useAppStore(s => s.settings.base_currency);
   const remaining = envelope.budgeted_amount - spent;
   const pct = Math.max(0, Math.min(1, spent / Math.max(1, envelope.budgeted_amount)));
 

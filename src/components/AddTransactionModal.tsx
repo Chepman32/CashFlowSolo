@@ -11,6 +11,9 @@ import {
   Alert,
   Platform,
   ActionSheetIOS,
+  Keyboard,
+  TouchableWithoutFeedback,
+  InputAccessoryView,
 } from 'react-native';
 import { colors } from '../theme/colors';
 import Animated, {
@@ -63,6 +66,8 @@ export default function AddTransactionModal({
   const [phase, setPhase] = useState<'pick' | 'form'>('pick');
   const [query, setQuery] = useState('');
   const [attachments, setAttachments] = useState<Attachment[]>([]);
+
+  const inputAccessoryViewID = 'amountInputAccessory';
 
   // Animation for phase transitions
   const slideAnim = useSharedValue(0);
@@ -236,17 +241,19 @@ export default function AddTransactionModal({
               </Pressable>
             )}
           </View>
-          <View style={styles.contentContainer}>
-            {/* Pick Phase */}
-            <Animated.View
-              style={[styles.phaseContainer, pickAnimStyle]}
-              pointerEvents={phase === 'pick' ? 'auto' : 'none'}
-            >
-              <ScrollView
-                style={{ flex: 1 }}
-                contentContainerStyle={{ flexGrow: 1 }}
-                showsVerticalScrollIndicator={false}
+          <TouchableWithoutFeedback onPress={Keyboard.dismiss} accessible={false}>
+            <View style={styles.contentContainer}>
+              {/* Pick Phase */}
+              <Animated.View
+                style={[styles.phaseContainer, pickAnimStyle]}
+                pointerEvents={phase === 'pick' ? 'auto' : 'none'}
               >
+                <ScrollView
+                  style={{ flex: 1 }}
+                  contentContainerStyle={{ flexGrow: 1 }}
+                  showsVerticalScrollIndicator={false}
+                  keyboardShouldPersistTaps="handled"
+                >
                 <View style={[styles.card, { backgroundColor: theme.surface }]}>
                   <Text style={{ color: theme.textSecondary }}>
                     {t('picker.type')}
@@ -323,6 +330,7 @@ export default function AddTransactionModal({
                     keyboardType="decimal-pad"
                     placeholder="0.00"
                     placeholderTextColor={theme.textSecondary}
+                    inputAccessoryViewID={inputAccessoryViewID}
                     style={[
                       styles.input,
                       { color: theme.textPrimary, flex: 1 },
@@ -403,7 +411,8 @@ export default function AddTransactionModal({
                 </ScrollView>
               </View>
             </Animated.View>
-          </View>
+            </View>
+          </TouchableWithoutFeedback>
 
           {phase === 'form' && (
             <View style={styles.footer}>
@@ -448,6 +457,21 @@ export default function AddTransactionModal({
           )}
         </SafeAreaView>
       </SafeAreaProvider>
+
+      {/* Keyboard Accessory with Done button for numeric keypad */}
+      {Platform.OS === 'ios' && (
+        <InputAccessoryView nativeID={inputAccessoryViewID}>
+          <View style={styles.keyboardAccessory}>
+            <View style={{ flex: 1 }} />
+            <Pressable
+              onPress={() => Keyboard.dismiss()}
+              style={styles.keyboardDoneButton}
+            >
+              <Text style={styles.keyboardDoneText}>{t('common.done')}</Text>
+            </Pressable>
+          </View>
+        </InputAccessoryView>
+      )}
 
       {/* Currency Picker Modal */}
       <Modal visible={showCurrencyPicker} animationType="slide" transparent>
@@ -655,6 +679,24 @@ const styles = StyleSheet.create({
   },
   currencyModalOptionName: { fontSize: 16, fontWeight: '600', marginBottom: 2 },
   currencyModalOptionCode: { fontSize: 14, fontWeight: '400' },
+  keyboardAccessory: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    backgroundColor: '#D1D5DB',
+    borderTopWidth: StyleSheet.hairlineWidth,
+    borderTopColor: '#9CA3AF',
+  },
+  keyboardDoneButton: {
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+  },
+  keyboardDoneText: {
+    color: '#007AFF',
+    fontSize: 17,
+    fontWeight: '600',
+  },
 });
 
 function Chip({

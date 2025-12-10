@@ -1,6 +1,7 @@
 import React, { useMemo, useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, useColorScheme } from 'react-native';
+import { View, Text, StyleSheet, ScrollView } from 'react-native';
 import { useTranslation } from 'react-i18next';
+import { useAppTheme } from '../theme/ThemeProvider';
 import { colors } from '../theme/colors';
 import { useAppStore } from '../store/useAppStore';
 import EnvelopeCard from '../components/EnvelopeCard';
@@ -14,11 +15,11 @@ import { getTranslatedEnvelopeName } from '../utils/translationHelpers';
 
 export default function Dashboard() {
   const { t } = useTranslation();
-  const isDark = useColorScheme() === 'dark';
-  const theme = isDark ? colors.dark : colors.light;
+  const { isDark, colors: theme } = useAppTheme();
   const accounts = useAppStore(s => s.accounts);
   const envelopes = useAppStore(s => s.envelopes);
   const transactions = useAppStore(s => s.transactions);
+  const baseCurrency = useAppStore(s => s.settings.base_currency);
   const [showAdd, setShowAdd] = useState(false);
 
   const totalBalance =
@@ -69,7 +70,7 @@ export default function Dashboard() {
               <Text style={{ color: theme.textSecondary, fontSize: 18 }}>{t('common.totalBalance')}</Text>
               <CurrencyDisplay
                 amount={totalBalance}
-                currency={useAppStore.getState().settings.base_currency}
+                currency={baseCurrency}
                 style={[styles.balance, { color: theme.textPrimary }]}
               />
             </View>
