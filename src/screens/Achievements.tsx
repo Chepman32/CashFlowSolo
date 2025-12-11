@@ -1,16 +1,15 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, useColorScheme, Pressable, Modal, Dimensions } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, Pressable, Modal, Dimensions } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import Icon from 'react-native-vector-icons/Feather';
-import { colors } from '../theme/colors';
 import { useAppStore } from '../store/useAppStore';
 import AchievementCard from '../components/AchievementCard';
 import RewardCard from '../components/RewardCard';
+import { useAppTheme } from '../theme/ThemeProvider';
 
 export default function Achievements() {
   const { t } = useTranslation();
-  const isDark = useColorScheme() === 'dark';
-  const theme = isDark ? colors.dark : colors.light;
+  const { colors: theme } = useAppTheme();
   const { width } = Dimensions.get('window');
   const itemWidth = (width - 48) / 3; // 3 columns with padding
 
@@ -134,7 +133,7 @@ export default function Achievements() {
   // Get icon color based on achievement status
   const getIconColor = (achievement: any, userAchievement?: any) => {
     if (userAchievement?.unlocked_at) {
-      return colors.light.primary; // Unlocked - primary color
+      return theme.primary; // Unlocked - primary color
     }
     return theme.textSecondary; // Locked - secondary color
   };
@@ -193,14 +192,19 @@ export default function Achievements() {
   return (
     <ScrollView style={[styles.container, { backgroundColor: theme.background }]}>
       {/* Header with stats */}
-      <View style={[styles.header, { backgroundColor: theme.surface }]}>
+      <View
+        style={[
+          styles.header,
+          { backgroundColor: theme.surface, borderBottomColor: theme.border },
+        ]}
+      >
         <Text style={[styles.headerTitle, { color: theme.textPrimary }]}>
           🏆 {t('achievements.title')}
         </Text>
 
         <View style={styles.statsContainer}>
           <View style={styles.stat}>
-            <Text style={[styles.statValue, { color: colors.light.primary }]}>
+            <Text style={[styles.statValue, { color: theme.primary }]}>
               {totalPoints}
             </Text>
             <Text style={[styles.statLabel, { color: theme.textSecondary }]}>
@@ -209,7 +213,7 @@ export default function Achievements() {
           </View>
 
           <View style={styles.stat}>
-            <Text style={[styles.statValue, { color: colors.light.primary }]}>
+            <Text style={[styles.statValue, { color: theme.primary }]}>
               {settings?.streak_days || 0}
             </Text>
             <Text style={[styles.statLabel, { color: theme.textSecondary }]}>
@@ -218,7 +222,7 @@ export default function Achievements() {
           </View>
 
           <View style={styles.stat}>
-            <Text style={[styles.statValue, { color: colors.light.primary }]}>
+            <Text style={[styles.statValue, { color: theme.primary }]}>
               {completionRate}%
             </Text>
             <Text style={[styles.statLabel, { color: theme.textSecondary }]}>
@@ -250,8 +254,9 @@ export default function Achievements() {
               styles.categoryButton,
               {
                 backgroundColor: selectedCategory === category.key
-                  ? colors.light.primary
-                  : theme.surface
+                  ? theme.primary
+                  : theme.surface,
+                borderColor: theme.border,
               }
             ]}
             onPress={() => setSelectedCategory(category.key)}
@@ -320,18 +325,18 @@ export default function Achievements() {
                   {getAchievementName(achievement)}
                 </Text>
                 
-                <Text style={[styles.achievementPoints, { color: colors.light.primary }]}>
+                <Text style={[styles.achievementPoints, { color: theme.primary }]}>
                   {achievement.points} pts
                 </Text>
                 
                 <View style={styles.progressContainer}>
-                  <View style={styles.progressBar}>
+                  <View style={[styles.progressBar, { backgroundColor: theme.border }]}>
                     <View 
                       style={[
                         styles.progressFill,
                         { 
                           width: `${progressPercentage}%`,
-                          backgroundColor: isUnlocked ? colors.light.primary : colors.light.textSecondary
+                          backgroundColor: isUnlocked ? theme.primary : theme.textSecondary
                         }
                       ]}
                     />
@@ -386,7 +391,7 @@ export default function Achievements() {
                     color={getIconColor(selectedAchievement, user_achievements.find(ua => ua.achievement_key === selectedAchievement.key))}
                   />
                   {user_achievements.find(ua => ua.achievement_key === selectedAchievement.key)?.unlocked_at && (
-                    <View style={styles.modalUnlockedBadge}>
+                    <View style={[styles.modalUnlockedBadge, { backgroundColor: theme.primary }]}>
                       <Icon name="check" size={24} color="white" />
                     </View>
                   )}
@@ -404,8 +409,8 @@ export default function Achievements() {
 
                 {/* Points */}
                 <View style={styles.modalPointsContainer}>
-                  <Icon name="star" size={20} color={colors.light.primary} />
-                  <Text style={[styles.modalPoints, { color: colors.light.primary }]}>
+                  <Icon name="star" size={20} color={theme.primary} />
+                  <Text style={[styles.modalPoints, { color: theme.primary }]}>
                     {selectedAchievement.points} {t('achievements.points')}
                   </Text>
                 </View>
@@ -420,13 +425,13 @@ export default function Achievements() {
                       {user_achievements.find(ua => ua.achievement_key === selectedAchievement.key)?.progress || 0}/{selectedAchievement.max_progress}
                     </Text>
                   </View>
-                  <View style={styles.modalProgressBar}>
+                  <View style={[styles.modalProgressBar, { backgroundColor: theme.border }]}>
                     <View
                       style={[
                         styles.modalProgressFill,
                         {
                           width: `${Math.min(((user_achievements.find(ua => ua.achievement_key === selectedAchievement.key)?.progress || 0) / selectedAchievement.max_progress) * 100, 100)}%`,
-                                                     backgroundColor: user_achievements.find(ua => ua.achievement_key === selectedAchievement.key)?.unlocked_at ? colors.light.primary : colors.light.textSecondary
+                          backgroundColor: user_achievements.find(ua => ua.achievement_key === selectedAchievement.key)?.unlocked_at ? theme.primary : theme.textSecondary,
                         }
                       ]}
                     />
@@ -435,7 +440,10 @@ export default function Achievements() {
 
                 {/* Close button */}
                 <Pressable
-                  style={[styles.modalCloseButton, { backgroundColor: theme.surface }]}
+                  style={[
+                    styles.modalCloseButton,
+                    { backgroundColor: theme.surface, borderColor: theme.border },
+                  ]}
                   onPress={handleModalClose}
                 >
                   <Text style={[styles.modalCloseText, { color: theme.textPrimary }]}>
@@ -464,7 +472,7 @@ export default function Achievements() {
               Награда успешно получена! Очки добавлены к вашему счету.
             </Text>
             <Pressable
-              style={[styles.modalButton, { backgroundColor: colors.light.primary }]}
+              style={[styles.modalButton, { backgroundColor: theme.primary }]}
               onPress={() => setShowRewardModal(false)}
             >
               <Text style={styles.modalButtonText}>Отлично!</Text>
@@ -518,6 +526,7 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     marginRight: 8,
     gap: 6,
+    borderWidth: StyleSheet.hairlineWidth,
   },
   categoryText: {
     fontSize: 14,
@@ -559,7 +568,6 @@ const styles = StyleSheet.create({
     width: 20,
     height: 20,
     borderRadius: 10,
-    backgroundColor: colors.light.primary,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -582,7 +590,6 @@ const styles = StyleSheet.create({
   progressBar: {
     width: '100%',
     height: 3,
-    backgroundColor: '#E5E5E5',
     borderRadius: 2,
     marginBottom: 4,
     overflow: 'hidden',
@@ -640,7 +647,6 @@ const styles = StyleSheet.create({
   swipeIndicator: {
     width: 40,
     height: 4,
-    backgroundColor: 'rgba(255, 255, 255, 0.3)',
     borderRadius: 2,
     alignSelf: 'center',
     marginVertical: 10,
@@ -660,7 +666,6 @@ const styles = StyleSheet.create({
     position: 'absolute',
     top: -8,
     right: -8,
-    backgroundColor: colors.light.primary,
     borderRadius: 16,
     width: 32,
     height: 32,
@@ -701,7 +706,6 @@ const styles = StyleSheet.create({
   },
   modalProgressBar: {
     height: 8,
-    backgroundColor: colors.light.textSecondary,
     borderRadius: 4,
   },
   modalProgressFill: {
@@ -713,7 +717,6 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
     borderRadius: 20,
     borderWidth: 1,
-    borderColor: 'rgba(0, 0, 0, 0.1)',
   },
   modalCloseText: {
     fontSize: 16,
