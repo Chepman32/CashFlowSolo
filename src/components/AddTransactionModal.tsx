@@ -51,6 +51,7 @@ export default function AddTransactionModal({
   const envelopes = useAppStore(s => s.envelopes);
   const addTransaction = useAppStore(s => s.addTransaction);
   const { t } = useTranslation();
+  const isIpad = Platform.OS === 'ios' && (Platform as any).isPad;
 
   const [amount, setAmount] = useState('');
   const [note, setNote] = useState('');
@@ -209,7 +210,8 @@ export default function AddTransactionModal({
     <Modal
       visible={visible}
       animationType="slide"
-      presentationStyle="fullScreen"
+      presentationStyle={isIpad ? 'overFullScreen' : 'fullScreen'}
+      statusBarTranslucent
       onRequestClose={onClose}
     >
       {/* A Modal renders outside the root tree. Wrap it in its own SafeAreaProvider
