@@ -710,6 +710,7 @@ function Chip({
   onPress: () => void;
   borderColor: string;
 }) {
+  const { colors: theme } = useAppTheme();
   const scale = useSharedValue(1);
   const aStyle = useAnimatedStyle(() => ({
     transform: [{ scale: scale.value }],
@@ -729,7 +730,7 @@ function Chip({
         ]}
       >
         <Text
-          style={{ color: active ? 'white' : '#111827', fontWeight: '600' }}
+          style={{ color: active ? 'white' : theme.textPrimary, fontWeight: '600' }}
         >
           {label}
         </Text>
@@ -749,6 +750,7 @@ function CategoryTile({
   color: string;
   onPress: () => void;
 }) {
+  const { colors: theme } = useAppTheme();
   const size = 92;
   return (
     <View style={{ width: '30%', marginBottom: 18, alignItems: 'center' }}>
@@ -765,7 +767,15 @@ function CategoryTile({
       >
         <Text style={{ fontSize: 32 }}>{icon}</Text>
       </Pressable>
-      <Text style={{ marginTop: 8, textAlign: 'center' }}>{label}</Text>
+      <Text
+        style={{
+          marginTop: 8,
+          textAlign: 'center',
+          color: theme.textPrimary,
+        }}
+      >
+        {label}
+      </Text>
     </View>
   );
 }
@@ -1058,6 +1068,7 @@ function AttachmentChip({
   a: Attachment;
   onRemove: () => void;
 }) {
+  const { colors: theme } = useAppTheme();
   const ext = a.name.split('.').pop()?.toLowerCase();
   const isImage =
     (a.mime || '').startsWith('image/') ||
@@ -1086,13 +1097,16 @@ function AttachmentChip({
           }}
         />
       ) : (
-        <Feather name="file" size={18} color="#111827" />
+        <Feather name="file" size={18} color={theme.textPrimary} />
       )}
-      <Text numberOfLines={1} style={{ maxWidth: 140, marginLeft: 6 }}>
+      <Text
+        numberOfLines={1}
+        style={{ maxWidth: 140, marginLeft: 6, color: theme.textPrimary }}
+      >
         {a.name}
       </Text>
       <Pressable onPress={onRemove} hitSlop={10} style={{ marginLeft: 6 }}>
-        <Feather name="x" size={16} color="#6B7280" />
+        <Feather name="x" size={16} color={theme.textSecondary} />
       </Pressable>
     </View>
   );
